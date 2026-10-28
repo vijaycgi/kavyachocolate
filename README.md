@@ -6,6 +6,9 @@ Shoppers browse four bars, choose a size, check out as a guest with courier ship
 
 Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 + PostgreSQL**.
 
+- **Live storefront:** <https://kavyachocolat.vercel.app>
+- **Source:** <https://github.com/vijaycgi/kavyachocolate>
+
 ---
 
 ## Contents

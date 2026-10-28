@@ -49,3 +49,6 @@ next-env.d.ts
 
 # regenerable design review screenshots
 /.impeccable/shots/
+
+.vercel
+.env*
