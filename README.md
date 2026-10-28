@@ -83,7 +83,8 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 **Requirements:** Node.js 20+ (tested on Node 24), npm. No external services required for local development.
 
 ```bash
-cd kavya-chocolat
+git clone https://github.com/vijaycgi/kavyachocolate.git
+cd kavyachocolate
 npm install
 cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
 npx prisma generate
@@ -91,6 +92,8 @@ npm run db:push             # creates prisma/dev.db
 npm run db:seed             # admin, products, settings, zones, pickup
 npm run dev
 ```
+
+The SQLite database (`prisma/dev.db`) and `.env` are intentionally not tracked; `db:push` and `db:seed` build a fresh local database.
 
 Open <http://localhost:3000>. Admin is at <http://localhost:3000/admin/login>.
 
