@@ -1,0 +1,123 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 1000" role="img" aria-label="Jaggery-Sweetened Dark Chocolate product placeholder">
+  <defs>
+  <linearGradient id="choc" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#4a2a1e"/>
+    <stop offset=".45" stop-color="#341a12"/>
+    <stop offset="1" stop-color="#1d0e09"/>
+  </linearGradient>
+  <linearGradient id="chocTop" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0" stop-color="#6a4030"/>
+    <stop offset="1" stop-color="#43251a"/>
+  </linearGradient>
+  <linearGradient id="paper" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#8d2b3a"/>
+    <stop offset=".5" stop-color="#75212f"/>
+    <stop offset="1" stop-color="#591622"/>
+  </linearGradient>
+  <linearGradient id="brass" x1="0" y1="0" x2="1" y2="1">
+    <stop offset="0" stop-color="#d8b57b"/>
+    <stop offset=".5" stop-color="#b08a57"/>
+    <stop offset="1" stop-color="#8a673a"/>
+  </linearGradient>
+
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.055"/></feComponentTransfer>
+  </filter>
+  <filter id="blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+
+    <radialGradient id="bg" cx=".45" cy=".38" r=".85">
+      <stop offset="0" stop-color="#faf3e7"/><stop offset=".62" stop-color="#f2e8d7"/><stop offset="1" stop-color="#e4d6c0"/>
+    </radialGradient>
+    <linearGradient id="paperBand" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#c08a45"/><stop offset=".55" stop-color="#a9742f"/><stop offset="1" stop-color="#7d5220"/>
+    </linearGradient>
+  </defs>
+  <rect width="800" height="1000" fill="url(#bg)"/>
+  <g opacity=".55">
+    <circle cx="640" cy="170" r="210" fill="#fff8ea" opacity=".5"/>
+    <circle cx="120" cy="830" r="260" fill="#dccbb2" opacity=".45"/>
+  </g>
+  <ellipse cx="430" cy="838" rx="310" ry="66" fill="#2a140b" opacity=".16" filter="url(#blur)"/>
+
+  <g transform="rotate(-7 400 500)">
+    <rect x="228" y="196" width="384" height="556" rx="7" fill="#1a0c07" opacity=".28" filter="url(#blur6)" transform="translate(14 18)"/>
+    <rect x="215" y="180" width="384" height="556" rx="6" fill="url(#choc)"/>
+    <rect x="215" y="180" width="384" height="556" rx="6" fill="none" stroke="#6b3d2a" stroke-width="1.5" opacity=".65"/>
+    <rect x="233" y="198" width="348" height="520" fill="none" stroke="#7b4a33" stroke-width="1" opacity=".28"/>
+
+    <g stroke="#552d1f" stroke-width="2.5" opacity=".55">
+      <line x1="291" y1="198" x2="291" y2="718"/><line x1="349" y1="198" x2="349" y2="718"/><line x1="407" y1="198" x2="407" y2="718"/><line x1="465" y1="198" x2="465" y2="718"/><line x1="523" y1="198" x2="523" y2="718"/>
+      <line x1="233" y1="263" x2="581" y2="263"/><line x1="233" y1="328" x2="581" y2="328"/><line x1="233" y1="393" x2="581" y2="393"/><line x1="233" y1="458" x2="581" y2="458"/><line x1="233" y1="523" x2="581" y2="523"/><line x1="233" y1="588" x2="581" y2="588"/><line x1="233" y1="653" x2="581" y2="653"/><line x1="233" y1="718" x2="581" y2="718"/>
+    </g>
+
+    <text x="407" y="336" text-anchor="middle" font-family="Georgia, 'Times New Roman', serif" font-size="27" letter-spacing="7" fill="#8b5a41" opacity=".9">KAVYA</text>
+    <text x="407" y="368" text-anchor="middle" font-family="Georgia, serif" font-size="14" letter-spacing="6.5" fill="#8b5a41" opacity=".75">CHOCOLAT</text>
+    <line x1="330" y1="392" x2="484" y2="392" stroke="#8b5a41" stroke-width="1" opacity=".5"/>
+    <text x="407" y="470" text-anchor="middle" font-family="Georgia, serif" font-size="38" letter-spacing="2" fill="#93614a" opacity=".92">DARK</text>
+           <text x="407" y="512" text-anchor="middle" font-family="Georgia, serif" font-size="22" letter-spacing="4" fill="#93614a" opacity=".8">JAGGERY</text>
+
+    <rect x="215" y="560" width="384" height="176" fill="url(#paperBand)"/>
+    <rect x="215" y="556" width="384" height="3" fill="url(#brass)" opacity=".8"/>
+    <text x="407" y="614" text-anchor="middle" font-family="Georgia, serif" font-size="23" letter-spacing="5" fill="#f3e6d6">JAGGERY</text>
+    <line x1="308" y1="634" x2="506" y2="634" stroke="#d6b786" stroke-width="1" opacity=".6"/>
+    <text x="407" y="664" text-anchor="middle" font-family="Georgia, serif" font-size="10" letter-spacing="3.6" fill="#e3cdbc" opacity=".9">PREMIUM HANDCRAFTED CHOCOLATE</text>
+    <text x="407" y="706" text-anchor="middle" font-family="Georgia, serif" font-size="11" letter-spacing="3" fill="#e3cdbc" opacity=".7">70 g · SMALL BATCH</text>
+  </g>
+
+  <g transform="translate(168 742) rotate(-14)">
+    <rect x="0" y="0" width="116" height="96" rx="4" fill="url(#chocTop)"/>
+    <rect x="0" y="0" width="116" height="96" rx="4" fill="none" stroke="#7a4a35" stroke-width="1.5" opacity=".7"/>
+    <line x1="58" y1="0" x2="58" y2="96" stroke="#4b271b" stroke-width="2" opacity=".6"/>
+    <line x1="0" y1="48" x2="116" y2="48" stroke="#4b271b" stroke-width="2" opacity=".6"/>
+    <rect x="0" y="96" width="116" height="14" rx="3" fill="#2a140d" opacity=".85"/>
+  </g>
+  <g transform="translate(276 800) rotate(9)">
+    <rect x="0" y="0" width="88" height="70" rx="4" fill="url(#chocTop)"/>
+    <rect x="0" y="0" width="88" height="70" rx="4" fill="none" stroke="#7a4a35" stroke-width="1.2" opacity=".6"/>
+    <line x1="44" y1="0" x2="44" y2="70" stroke="#4b271b" stroke-width="2" opacity=".5"/>
+  </g>
+
+  <g transform="translate(150 620) rotate(-18)">
+    <ellipse rx="26" ry="16.12" fill="#4b2517"/>
+    <ellipse cx="-4.68" cy="-4.16" rx="13" ry="6.76" fill="#7a4630" opacity=".55"/>
+    <path d="M -19.5 0 Q 0 4.68 19.5 0" stroke="#2a120a" stroke-width="3.12" fill="none" opacity=".6"/>
+  </g>
+  <g transform="translate(196 664) rotate(24)">
+    <ellipse rx="22" ry="13.64" fill="#4b2517"/>
+    <ellipse cx="-3.96" cy="-3.52" rx="11" ry="5.720000000000001" fill="#7a4630" opacity=".55"/>
+    <path d="M -16.5 0 Q 0 3.96 16.5 0" stroke="#2a120a" stroke-width="2.6399999999999997" fill="none" opacity=".6"/>
+  </g>
+  <g transform="translate(658 690) rotate(12)">
+    <ellipse rx="27" ry="16.74" fill="#4b2517"/>
+    <ellipse cx="-4.859999999999999" cy="-4.32" rx="13.5" ry="7.0200000000000005" fill="#7a4630" opacity=".55"/>
+    <path d="M -20.25 0 Q 0 4.859999999999999 20.25 0" stroke="#2a120a" stroke-width="3.2399999999999998" fill="none" opacity=".6"/>
+  </g>
+  <g transform="translate(694 640) rotate(-26)">
+    <ellipse rx="20" ry="12.4" fill="#4b2517"/>
+    <ellipse cx="-3.5999999999999996" cy="-3.2" rx="10" ry="5.2" fill="#7a4630" opacity=".55"/>
+    <path d="M -15 0 Q 0 3.5999999999999996 15 0" stroke="#2a120a" stroke-width="2.4" fill="none" opacity=".6"/>
+  </g>
+  <g transform="translate(120 710) rotate(8)">
+    <ellipse rx="18" ry="11.16" fill="#4b2517"/>
+    <ellipse cx="-3.2399999999999998" cy="-2.88" rx="9" ry="4.68" fill="#7a4630" opacity=".55"/>
+    <path d="M -13.5 0 Q 0 3.2399999999999998 13.5 0" stroke="#2a120a" stroke-width="2.16" fill="none" opacity=".6"/>
+  </g>
+
+  
+  <g transform="translate(146 812) rotate(-12) scale(0.9)">
+    <path d="M -30 -18 L 18 -30 L 34 6 L 4 30 L -32 16 Z" fill="#c58f42"/>
+    <path d="M -30 -18 L 18 -30 L 34 6 L 4 30 L -32 16 Z" fill="none" stroke="#94642a" stroke-width="2"/>
+    <path d="M -30 -18 L 4 2 L 34 6 M 4 2 L 4 30" stroke="#a9742f" stroke-width="3" fill="none"/>
+    <path d="M -14 -14 L 14 -21" stroke="#f0cf93" stroke-width="4" opacity=".7" stroke-linecap="round"/>
+  </g><g transform="translate(196 848) rotate(20) scale(0.65)">
+    <path d="M -30 -18 L 18 -30 L 34 6 L 4 30 L -32 16 Z" fill="#c58f42"/>
+    <path d="M -30 -18 L 18 -30 L 34 6 L 4 30 L -32 16 Z" fill="none" stroke="#94642a" stroke-width="2"/>
+    <path d="M -30 -18 L 4 2 L 34 6 M 4 2 L 4 30" stroke="#a9742f" stroke-width="3" fill="none"/>
+    <path d="M -14 -14 L 14 -21" stroke="#f0cf93" stroke-width="4" opacity=".7" stroke-linecap="round"/>
+  </g>
+
+  <rect width="800" height="1000" filter="url(#grain)" opacity=".55"/>
+</svg>

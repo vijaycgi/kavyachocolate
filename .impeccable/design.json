@@ -1,0 +1,373 @@
+﻿{
+  "schemaVersion": 2,
+  "generatedAt": "2026-10-28T16:02:22Z",
+  "title": "Design System: Kavya Chocolat",
+  "extensions": {
+    "colorMeta": {
+      "burgundy": {
+        "role": "primary",
+        "displayName": "Atelier Burgundy",
+        "canonical": "oklch(38.5% 0.117 15.0)",
+        "tonalRamp": [
+          "oklch(15% 0.078 15.0)",
+          "oklch(25% 0.094 15.0)",
+          "oklch(36% 0.113 15.0)",
+          "oklch(47% 0.103 15.0)",
+          "oklch(58% 0.084 15.0)",
+          "oklch(69% 0.066 15.0)",
+          "oklch(80% 0.048 15.0)",
+          "oklch(92% 0.028 15.0)"
+        ]
+      },
+      "paper": {
+        "role": "neutral",
+        "displayName": "Counter Paper",
+        "canonical": "oklch(95.4% 0.018 81.3)",
+        "tonalRamp": [
+          "oklch(15% 0.003 81.3)",
+          "oklch(25% 0.003 81.3)",
+          "oklch(36% 0.003 81.3)",
+          "oklch(47% 0.005 81.3)",
+          "oklch(58% 0.008 81.3)",
+          "oklch(69% 0.011 81.3)",
+          "oklch(80% 0.014 81.3)",
+          "oklch(92% 0.017 81.3)"
+        ]
+      },
+      "cream": {
+        "role": "neutral",
+        "displayName": "Fresh Cream",
+        "canonical": "oklch(98.0% 0.011 84.6)",
+        "tonalRamp": [
+          "oklch(15% 0.002 84.6)",
+          "oklch(25% 0.002 84.6)",
+          "oklch(36% 0.002 84.6)",
+          "oklch(47% 0.003 84.6)",
+          "oklch(58% 0.005 84.6)",
+          "oklch(69% 0.007 84.6)",
+          "oklch(80% 0.008 84.6)",
+          "oklch(92% 0.010 84.6)"
+        ]
+      },
+      "ink": {
+        "role": "neutral",
+        "displayName": "Cocoa Ink",
+        "canonical": "oklch(21.2% 0.028 38.1)",
+        "tonalRamp": [
+          "oklch(15% 0.026 38.1)",
+          "oklch(25% 0.027 38.1)",
+          "oklch(36% 0.022 38.1)",
+          "oklch(47% 0.018 38.1)",
+          "oklch(58% 0.013 38.1)",
+          "oklch(69% 0.009 38.1)",
+          "oklch(80% 0.005 38.1)",
+          "oklch(92% 0.005 38.1)"
+        ]
+      },
+      "cocoa": {
+        "role": "neutral",
+        "displayName": "Deep Cocoa",
+        "canonical": "oklch(27.6% 0.043 37.9)",
+        "tonalRamp": [
+          "oklch(15% 0.035 37.9)",
+          "oklch(25% 0.042 37.9)",
+          "oklch(36% 0.038 37.9)",
+          "oklch(47% 0.031 37.9)",
+          "oklch(58% 0.024 37.9)",
+          "oklch(69% 0.018 37.9)",
+          "oklch(80% 0.011 37.9)",
+          "oklch(92% 0.008 37.9)"
+        ]
+      },
+      "brass": {
+        "role": "secondary",
+        "displayName": "Brass Rule",
+        "canonical": "oklch(65.8% 0.082 73.7)",
+        "tonalRamp": [
+          "oklch(15% 0.023 73.7)",
+          "oklch(25% 0.034 73.7)",
+          "oklch(36% 0.047 73.7)",
+          "oklch(47% 0.060 73.7)",
+          "oklch(58% 0.073 73.7)",
+          "oklch(69% 0.078 73.7)",
+          "oklch(80% 0.066 73.7)",
+          "oklch(92% 0.051 73.7)"
+        ]
+      },
+      "brass-ink": {
+        "role": "secondary",
+        "displayName": "Brass Ink",
+        "canonical": "oklch(48.4% 0.080 73.0)",
+        "tonalRamp": [
+          "oklch(15% 0.042 73.0)",
+          "oklch(25% 0.053 73.0)",
+          "oklch(36% 0.066 73.0)",
+          "oklch(47% 0.078 73.0)",
+          "oklch(58% 0.069 73.0)",
+          "oklch(69% 0.056 73.0)",
+          "oklch(80% 0.044 73.0)",
+          "oklch(92% 0.030 73.0)"
+        ]
+      },
+      "brass-light": {
+        "role": "secondary",
+        "displayName": "Brass Light",
+        "canonical": "oklch(80.5% 0.074 74.6)",
+        "tonalRamp": [
+          "oklch(15% 0.013 74.6)",
+          "oklch(25% 0.015 74.6)",
+          "oklch(36% 0.027 74.6)",
+          "oklch(47% 0.039 74.6)",
+          "oklch(58% 0.050 74.6)",
+          "oklch(69% 0.062 74.6)",
+          "oklch(80% 0.073 74.6)",
+          "oklch(92% 0.062 74.6)"
+        ]
+      },
+      "line": {
+        "role": "neutral",
+        "displayName": "Hairline",
+        "canonical": "oklch(83.5% 0.041 77.1)",
+        "tonalRamp": [
+          "oklch(15% 0.007 77.1)",
+          "oklch(25% 0.007 77.1)",
+          "oklch(36% 0.013 77.1)",
+          "oklch(47% 0.019 77.1)",
+          "oklch(58% 0.026 77.1)",
+          "oklch(69% 0.032 77.1)",
+          "oklch(80% 0.039 77.1)",
+          "oklch(92% 0.036 77.1)"
+        ]
+      },
+      "ink-2": {
+        "role": "neutral",
+        "displayName": "Soft Cocoa",
+        "canonical": "oklch(41.3% 0.034 49.0)",
+        "tonalRamp": [
+          "oklch(15% 0.021 49.0)",
+          "oklch(25% 0.026 49.0)",
+          "oklch(36% 0.031 49.0)",
+          "oklch(47% 0.031 49.0)",
+          "oklch(58% 0.026 49.0)",
+          "oklch(69% 0.021 49.0)",
+          "oklch(80% 0.015 49.0)",
+          "oklch(92% 0.009 49.0)"
+        ]
+      }
+    },
+    "typographyMeta": {
+      "display": {
+        "displayName": "Atelier Display",
+        "purpose": "Home hero and major closing statements only; Sen 600 with tight -0.03em tracking and line height just above 1."
+      },
+      "section": {
+        "displayName": "Section Heading",
+        "purpose": "Section-level headings across the storefront and long-form pages; Sen 600 at -0.025em."
+      },
+      "title": {
+        "displayName": "Title",
+        "purpose": "Product names, card titles, panel headings, and admin page titles; Sen 600 at -0.02em."
+      },
+      "body": {
+        "displayName": "Body",
+        "purpose": "Paragraphs and reading copy; capped near 60ch."
+      },
+      "label": {
+        "displayName": "Functional Label",
+        "purpose": "Eyebrows, field labels, nav, buttons, table headers; Sen 600 uppercase, never below 11px."
+      }
+    },
+    "shadows": [
+      {
+        "name": "plate",
+        "value": "0 24px 60px -28px rgb(36 20 15 / 0.45), 0 2px 0 rgb(36 20 15 / 0.06)",
+        "purpose": "Large photography plates and floating cards over a burgundy field."
+      },
+      {
+        "name": "soft",
+        "value": "0 18px 40px -26px rgb(36 20 15 / 0.4)",
+        "purpose": "Cart drawer and compact overlays."
+      }
+    ],
+    "motion": [
+      {
+        "name": "rise",
+        "value": "rise 720ms cubic-bezier(0.2, 0.7, 0.2, 1) both",
+        "purpose": "First-paint hero entrance; disabled under prefers-reduced-motion."
+      },
+      {
+        "name": "fade",
+        "value": "fade 500ms ease both",
+        "purpose": "Supporting first-paint fades with 90/170/260ms delays."
+      },
+      {
+        "name": "state",
+        "value": "180ms ease",
+        "purpose": "Button background, border, color, and 1px active translation."
+      }
+    ],
+    "breakpoints": [
+      {
+        "name": "sm",
+        "value": "640px"
+      },
+      {
+        "name": "md",
+        "value": "768px"
+      },
+      {
+        "name": "lg",
+        "value": "1024px"
+      },
+      {
+        "name": "xl",
+        "value": "1280px"
+      }
+    ]
+  },
+  "components": [
+    {
+      "name": "Primary Button",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "The single committing action in a decision area: add to bag, place order, save.",
+      "html": "<button class=\"ds-btn-primary\">Add to bag</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 3rem; padding: .85rem 1.5rem; background: #75212f; border: 1px solid #75212f; border-radius: 2px; color: #f6efe3; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: .6875rem; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease, transform 180ms ease; } .ds-btn-primary:hover { background: #4b101c; border-color: #4b101c; } .ds-btn-primary:active { transform: translateY(1px); } .ds-btn-primary:focus-visible { outline: 2px solid #75212f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Outline Button",
+      "kind": "button",
+      "refersTo": "button-outline",
+      "description": "Secondary storefront action that inverts to ink on hover.",
+      "html": "<button class=\"ds-btn-outline\">Track an order</button>",
+      "css": ".ds-btn-outline { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 3rem; padding: .85rem 1.5rem; background: transparent; border: 1px solid rgba(36,20,15,.28); border-radius: 2px; color: #24140f; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: .6875rem; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; cursor: pointer; transition: background-color 180ms ease, color 180ms ease, border-color 180ms ease; } .ds-btn-outline:hover { background: #24140f; border-color: #24140f; color: #f6efe3; } .ds-btn-outline:focus-visible { outline: 2px solid #75212f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Light Button",
+      "kind": "button",
+      "refersTo": "button-light",
+      "description": "Primary action placed on a burgundy field; paper ground with burgundy text.",
+      "html": "<button class=\"ds-btn-light\">Shop the collection</button>",
+      "css": ".ds-btn-light { display: inline-flex; align-items: center; justify-content: center; gap: .6rem; min-height: 3rem; padding: .85rem 1.5rem; background: #f6efe3; border: 1px solid #f6efe3; border-radius: 2px; color: #75212f; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: .6875rem; font-weight: 600; line-height: 1.2; letter-spacing: .18em; text-transform: uppercase; cursor: pointer; transition: background-color 180ms ease, border-color 180ms ease; } .ds-btn-light:hover { background: #fcf8f0; border-color: #fcf8f0; } .ds-btn-light:focus-visible { outline: 2px solid #f6efe3; outline-offset: 3px; }"
+    },
+    {
+      "name": "Text Field",
+      "kind": "input",
+      "refersTo": "field",
+      "description": "Cream-ground field used across checkout and admin forms, paired with an 11px uppercase label.",
+      "html": "<label class=\"ds-field-label\" for=\"ds-field-email\">Email</label><input class=\"ds-field\" id=\"ds-field-email\" type=\"email\" placeholder=\"you@example.com\" />",
+      "css": ".ds-field-label { display: block; margin-bottom: .4rem; color: #5b463b; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: .6875rem; font-weight: 500; letter-spacing: .16em; text-transform: uppercase; } .ds-field { display: block; width: 100%; min-height: 3rem; padding: .72rem .9rem; background: #fcf8f0; border: 1px solid #d8c6ac; border-radius: 2px; color: #24140f; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: 1rem; line-height: 1.4; transition: border-color 160ms ease, box-shadow 160ms ease; } .ds-field::placeholder { color: rgba(91,70,59,.62); } .ds-field:focus { outline: none; border-color: #75212f; box-shadow: 0 0 0 3px rgba(117,33,47,.14); }"
+    },
+    {
+      "name": "Variant Chip",
+      "kind": "chip",
+      "refersTo": "tag",
+      "description": "Rectangular size selector; the selected chip becomes a solid burgundy field. Tags elsewhere use the pill variant.",
+      "html": "<div class=\"ds-chip-row\" role=\"group\" aria-label=\"Choose a size\"><button class=\"ds-chip\">70 g Â· â‚¹480</button><button class=\"ds-chip ds-chip-selected\" aria-pressed=\"true\">150 g Â· â‚¹980</button></div>",
+      "css": ".ds-chip-row { display: flex; flex-wrap: wrap; gap: .5rem; } .ds-chip { min-height: 2.75rem; padding: .55rem .9rem; background: #fcf8f0; border: 1px solid #d8c6ac; border-radius: 2px; color: #5b463b; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: .75rem; font-weight: 500; letter-spacing: .04em; cursor: pointer; transition: border-color 160ms ease, background-color 160ms ease, color 160ms ease; } .ds-chip:hover { border-color: #75212f; color: #75212f; } .ds-chip-selected { background: #75212f; border-color: #75212f; color: #f6efe3; } .ds-chip-selected:hover { background: #4b101c; border-color: #4b101c; color: #f6efe3; } .ds-chip:focus-visible { outline: 2px solid #75212f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Product Card",
+      "kind": "card",
+      "refersTo": "product-card",
+      "description": "Image-first specimen card: 4:5 plate, index label, ruled caption block, price range. No panel background.",
+      "html": "<a class=\"ds-product\" href=\"#\"><span class=\"ds-product-plate\"><span class=\"ds-product-index\">02</span><svg viewBox=\"0 0 100 120\" aria-hidden=\"true\"><rect x=\"18\" y=\"30\" width=\"64\" height=\"60\" rx=\"2\" fill=\"#3a2018\"/><path d=\"M18 40h64M18 54h64M18 68h64M18 82h64\" stroke=\"#4b101c\" stroke-width=\"2\"/></svg></span><span class=\"ds-product-collection\">Dry fruit</span><span class=\"ds-product-name\">70% Dark Chocolate with Dry Fruits</span><span class=\"ds-product-meta\">70 g / 150 g</span><span class=\"ds-product-price\">â‚¹540 â€“ â‚¹1,100</span></a>",
+      "css": ".ds-product { display: flex; flex-direction: column; gap: .75rem; color: #24140f; font-family: Sen, ui-sans-serif, system-ui, sans-serif; text-decoration: none; } .ds-product-plate { position: relative; display: block; aspect-ratio: 4 / 5; overflow: hidden; background: #efe3d1; border: 1px solid #d8c6ac; border-radius: 2px; } .ds-product-plate svg { display: block; width: 100%; height: 100%; transition: transform 500ms ease; } .ds-product:hover .ds-product-plate svg { transform: scale(1.03); } .ds-product-index { position: absolute; top: .75rem; left: .75rem; display: flex; align-items: center; justify-content: center; width: 2rem; height: 2rem; background: rgba(246,239,227,.9); border: 1px solid rgba(246,239,227,.5); color: #24140f; font-size: .6875rem; font-weight: 600; letter-spacing: .1em; } .ds-product-collection { margin-top: .25rem; padding-top: .75rem; border-top: 1px solid #d8c6ac; color: #75212f; font-size: .6875rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; } .ds-product-name { font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: 1.4rem; font-weight: 600; line-height: 1.16; letter-spacing: -0.02em; } .ds-product-meta { color: #5b463b; font-size: .6875rem; letter-spacing: .14em; text-transform: uppercase; } .ds-product-price { color: #24140f; font-size: .9375rem; font-variant-numeric: tabular-nums; } .ds-product:focus-visible { outline: 2px solid #75212f; outline-offset: 3px; }"
+    },
+    {
+      "name": "Announcement Bar",
+      "kind": "custom",
+      "description": "The burgundy rule above the storefront header; one short operational line, never a rotating carousel.",
+      "html": "<div class=\"ds-announcement\"><p>Small-batch chocolate, made in India Â· Complimentary shipping over â‚¹1,500</p></div>",
+      "css": ".ds-announcement { display: flex; align-items: center; justify-content: center; min-height: 2.15rem; padding: .5rem 1.25rem; background: #75212f; color: rgba(246,239,227,.9); } .ds-announcement p { margin: 0; max-width: 60rem; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: 10.5px; font-weight: 500; line-height: 1.5; letter-spacing: .18em; text-align: center; text-transform: uppercase; }"
+    },
+    {
+      "name": "Admin Stat Card",
+      "kind": "card",
+      "refersTo": "admin-stat",
+      "description": "Dashboard metric block; the emphasized variant becomes a burgundy field to mark the one number that matters.",
+      "html": "<div class=\"ds-stat\"><p class=\"ds-stat-label\">Orders today</p><p class=\"ds-stat-value\">12</p><p class=\"ds-stat-detail\">3 awaiting processing</p></div><div class=\"ds-stat ds-stat-emphasis\"><p class=\"ds-stat-label\">Revenue today</p><p class=\"ds-stat-value\">â‚¹14,820</p><p class=\"ds-stat-detail\">Across 12 orders</p></div>",
+      "css": ".ds-stat { padding: 1rem; background: #fcf8f0; border: 1px solid #d8c6ac; border-radius: 2px; color: #24140f; font-family: Sen, ui-sans-serif, system-ui, sans-serif; } .ds-stat-label { margin: 0; color: #5b463b; font-size: .6875rem; font-weight: 600; letter-spacing: .18em; text-transform: uppercase; } .ds-stat-value { margin: .5rem 0 0; font-family: Sen, ui-sans-serif, system-ui, sans-serif; font-size: 1.875rem; font-weight: 600; line-height: 1; font-variant-numeric: tabular-nums; } .ds-stat-detail { margin: .5rem 0 0; color: #5b463b; font-size: .75rem; line-height: 1.4; } .ds-stat-emphasis { background: #75212f; border-color: #75212f; color: #f6efe3; } .ds-stat-emphasis .ds-stat-label, .ds-stat-emphasis .ds-stat-detail { color: rgba(246,239,227,.8); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "The Chocolate Atelier Counter",
+    "overview": "Kavya Chocolat should feel like standing at a small chocolate studio's counter: a sheet of warm cream paper, a burgundy lacquer panel, a brass ruler, and four bars laid out like specimens with their tasting notes. The system is editorial rather than promotional. It uses ruled structure, generous margins, and one confident display face to make a modest catalogue feel considered. It refuses the centred-hero-plus-three-icon-cards storefront, glossy gradients, floating rounded cards, and decoration that does not carry information. Burgundy is a field, not a highlight: the announcement rule, the footer, the admin rail, the hero plate, and selected panels. Cream paper carries most of the page. Brass is a drafting line â€” borders, rules, small numerals â€” and has a separate, darker text variant so it never fails contrast on paper. Photography is large, warm, and quiet; the interface stays out of its way. Motion is restrained: a single rise-and-fade on first paint, 160â€“180ms state transitions, and nothing that loops. The fixed paper grain is the only ambient texture.",
+    "keyCharacteristics": [
+      "Warm cream paper (#f6efe3) with a 3.5% fixed grain overlay.",
+      "Burgundy (#75212f) as structural field, not accent sprinkles.",
+      "Sharp 2px corners; 1px brass-toned hairlines; no rounded cards.",
+      "One family (Sen) for display, UI, body, and money; hierarchy from weight, size, and case.",
+      "Sen 600 headlines at tight tracking; 400 body; 600 uppercase labels. No second face, no italic.",
+      "Flat by default; depth from tonal fields and hairlines, not drop shadows."
+    ],
+    "rules": [
+      {
+        "name": "The Burgundy Field Rule",
+        "body": "Burgundy is applied as a complete field â€” a bar, a rail, a plate, a footer â€” not as confetti. A screen may have several burgundy fields; it should not have burgundy dots, pills, and underlines scattered between them.",
+        "section": "colors"
+      },
+      {
+        "name": "The Brass Contrast Rule",
+        "body": "Brass #b08a57 is a line color on light grounds, never a text color. Text that should read as brass uses Brass Ink on paper and Brass Light on burgundy.",
+        "section": "colors"
+      },
+      {
+        "name": "The Paper Majority Rule",
+        "body": "Cream paper remains the dominant surface. If burgundy covers more than roughly a third of a storefront screen, the screen is probably a campaign surface, not a catalogue page.",
+        "section": "colors"
+      },
+      {
+        "name": "The 11px Floor Rule",
+        "body": "Functional text â€” links, labels, buttons, table cells, metadata that carries meaning â€” never goes below 11px, including inside the footer. Only non-interactive legal smallprint may sit at 10px, and even that is discouraged.",
+        "section": "typography"
+      },
+      {
+        "name": "The One-Family Rule",
+        "body": "Sen carries every word on the page. Display headings are Sen 600 with tight tracking, labels are Sen 600 uppercase and tracked, body is Sen 400. A second typeface, a script face, or a fabricated italic is off-system.",
+        "section": "typography"
+      },
+      {
+        "name": "The Mixed-Case Body Rule",
+        "body": "Body copy is sentence case. Uppercase is reserved for short labels, eyebrows, and buttons, with tracking added to compensate.",
+        "section": "typography"
+      },
+      {
+        "name": "The Ruled Not Boxed Rule",
+        "body": "Prefer a 1px rule and spacing over a bordered, shadowed card. Panels are for forms, admin data, and the cart drawer; editorial content sits directly on paper.",
+        "section": "layout"
+      },
+      {
+        "name": "The Flat-By-Default Rule",
+        "body": "If a surface can be separated with a rule or a tonal shift, do not give it a shadow. Shadows signal something floating above the page, not a section boundary.",
+        "section": "elevation"
+      },
+      {
+        "name": "The Two-Corner Rule",
+        "body": "Everything structural is 2px; only tags and status pills go round. A rounded content card is off-system.",
+        "section": "shapes"
+      }
+    ],
+    "dos": [
+      "Do keep cream paper as the majority surface and use burgundy as a complete field.",
+      "Do use 11px as the functional-text floor and 12px+ for body metadata where space allows.",
+      "Do use Brass Ink for text on paper and Brass Light for text on burgundy.",
+      "Do separate sections with 1px hairlines and spacing before reaching for a card or shadow.",
+      "Do label placeholders visibly: \"Placeholder price Â· tax not configured\", \"placeholder photograph\" in alt text, \"Tax (not configured)\".",
+      "Do keep one primary button per decision area and make the next action obvious.",
+      "Do preserve the logo's proportions and clear space; use the knockout version on burgundy.",
+      "Do keep numbers tabular (.num) in prices, totals, stock, and tables."
+    ],
+    "donts": [
+      "Don't use brass #b08a57 as text on paper or cream; it fails 4.5:1.",
+      "Don't set functional text below 11px, including footer links and metadata.",
+      "Don't round content cards, images, or panels beyond 2px, or introduce a second corner language.",
+      "Don't scatter burgundy across small dots, pills, and underlines instead of committing to a field.",
+      "Don't use gradients except as photographic scrims over images.",
+      "Don't introduce a second typeface, a script face, or a synthetic italic; Sen's variable weights carry display, notes, and UI.",
+      "Don't invent reviews, ratings, certifications, nutrition panels, or health claims to fill a layout.",
+      "Don't describe jaggery as sugar-free, or an order as paid, or an email as sent while email is unconfigured.",
+      "Don't hide admin actions behind navigation alone; every protected action is server-verified, and the UI should reflect that seriousness."
+    ]
+  }
+}

@@ -1,0 +1,272 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model AdminUser {
+  id           String    @id @default(cuid())
+  email        String    @unique
+  name         String
+  passwordHash String
+  role         String    @default("ADMIN")
+  createdAt    DateTime  @default(now())
+  sessions     Session[]
+}
+
+model Session {
+  id        String    @id @default(cuid())
+  tokenHash String    @unique
+  adminId   String
+  admin     AdminUser @relation(fields: [adminId], references: [id], onDelete: Cascade)
+  expiresAt DateTime
+  createdAt DateTime  @default(now())
+
+  @@index([adminId])
+}
+
+model Product {
+  id              String         @id @default(cuid())
+  slug            String         @unique
+  name            String
+  collection      String         @default("CLASSIC")
+  tagline         String         @default("")
+  description     String         @default("")
+  story           String         @default("")
+  ingredients     String         @default("")
+  allergens       String         @default("")
+  cocoaPercent    Int?
+  imageUrl        String         @default("/images/product-classic.svg")
+  hoverImageUrl   String?
+  featured        Boolean        @default(false)
+  published       Boolean        @default(true)
+  position        Int            @default(0)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  variants        Variant[]
+  images          ProductImage[]
+  orderItems      OrderItem[]
+  movements       InventoryMovement[]
+
+  @@index([published, position])
+}
+
+model ProductImage {
+  id        String  @id @default(cuid())
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+  url       String
+  alt       String  @default("")
+  position  Int     @default(0)
+
+  @@index([productId])
+}
+
+model Variant {
+  id                   String   @id @default(cuid())
+  productId            String
+  product              Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name                 String
+  sku                  String   @unique
+  weightGrams          Int      @default(70)
+  priceMinor           Int      @default(0)
+  compareAtMinor       Int?
+  stock                Int      @default(0)
+  lowStockThreshold    Int      @default(6)
+  active               Boolean  @default(true)
+  shippingEligible     Boolean  @default(true)
+  internationalEligible Boolean @default(true)
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+  orderItems           OrderItem[]
+  movements            InventoryMovement[]
+
+  @@index([productId])
+}
+
+model InventoryMovement {
+  id         String   @id @default(cuid())
+  variantId  String
+  variant    Variant  @relation(fields: [variantId], references: [id], onDelete: Cascade)
+  productId  String
+  product    Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  delta      Int
+  reason     String
+  note       String?
+  orderId    String?
+  stockAfter Int
+  createdAt  DateTime @default(now())
+
+  @@index([variantId, createdAt])
+}
+
+model Customer {
+  id        String    @id @default(cuid())
+  email     String    @unique
+  name      String
+  phone     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  orders    Order[]
+  addresses Address[]
+}
+
+model Address {
+  id         String    @id @default(cuid())
+  customerId String?
+  customer   Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  orderId    String?   @unique
+  order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  kind       String    @default("SHIPPING")
+  name       String
+  phone      String?
+  line1      String
+  line2      String?
+  city       String
+  state      String?
+  postalCode String
+  country    String
+  createdAt  DateTime  @default(now())
+
+  @@index([customerId])
+}
+
+model Order {
+  id                 String          @id @default(cuid())
+  orderNumber        String          @unique
+  accessKey          String          @unique
+  customerId         String?
+  customer           Customer?       @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  email              String
+  name               String
+  phone              String?
+  status             String          @default("PLACED")
+  fulfillmentMethod  String
+  currency           String          @default("INR")
+  subtotalMinor      Int             @default(0)
+  shippingMinor      Int             @default(0)
+  discountMinor      Int             @default(0)
+  taxMinor           Int             @default(0)
+  totalMinor         Int             @default(0)
+  taxLabel           String          @default("Tax (not configured)")
+  couponCode         String?
+  notes              String?
+  courier            String?
+  trackingNumber     String?
+  trackingUrl        String?
+  pickupLocationId   String?
+  pickupLocationName String?
+  pickupInstructions String?
+  shippingAddressId  String?
+  address            Address?
+  pickupLocation     PickupLocation? @relation(fields: [pickupLocationId], references: [id], onDelete: SetNull)
+  idempotencyKey     String          @unique
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  cancelledAt        DateTime?
+  shippedAt          DateTime?
+  completedAt        DateTime?
+  items              OrderItem[]
+  events             OrderEvent[]
+
+  @@index([status])
+  @@index([createdAt])
+  @@index([email])
+}
+
+model OrderItem {
+  id             String   @id @default(cuid())
+  orderId        String
+  order          Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId      String?
+  product        Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+  variantId      String?
+  variant        Variant? @relation(fields: [variantId], references: [id], onDelete: SetNull)
+  name           String
+  variantName    String
+  sku            String
+  unitPriceMinor Int
+  quantity       Int
+  lineTotalMinor Int
+  currency       String   @default("INR")
+  taxRateBp      Int      @default(0)
+  imageUrl       String   @default("")
+
+  @@index([orderId])
+}
+
+model OrderEvent {
+  id        String   @id @default(cuid())
+  orderId   String
+  order     Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  type      String
+  message   String
+  actor     String   @default("SYSTEM")
+  createdAt DateTime @default(now())
+
+  @@index([orderId, createdAt])
+}
+
+model PickupLocation {
+  id           String  @id @default(cuid())
+  name         String
+  addressLine  String
+  city         String
+  postalCode   String
+  phone        String?
+  instructions String  @default("")
+  hours        String  @default("")
+  active       Boolean @default(true)
+  position     Int     @default(0)
+  orders       Order[]
+}
+
+model ShippingZone {
+  id             String  @id @default(cuid())
+  name           String
+  countries      String  @default("[]")
+  feeMinor       Int     @default(0)
+  freeOverMinor  Int     @default(0)
+  minDays        Int?
+  maxDays        Int?
+  active         Boolean @default(true)
+  position       Int     @default(0)
+}
+
+model DeliveryArea {
+  id               String  @id @default(cuid())
+  name             String
+  postalCodes      String  @default("[]")
+  feeMinor         Int     @default(0)
+  minOrderMinor    Int     @default(0)
+  schedule         String  @default("")
+  active           Boolean @default(true)
+  position         Int     @default(0)
+}
+
+model Discount {
+  id                  String   @id @default(cuid())
+  code                String   @unique
+  type                String   @default("PERCENT")
+  value               Int      @default(0)
+  minSubtotalMinor    Int      @default(0)
+  active              Boolean  @default(true)
+  expiresAt           DateTime?
+  usageLimit          Int?
+  usedCount           Int      @default(0)
+  createdAt           DateTime @default(now())
+}
+
+model StoreSetting {
+  key   String @id
+  value String
+}
+
+model NewsletterSubscriber {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  createdAt DateTime @default(now())
+}

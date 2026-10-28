@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 700" role="img" aria-label="Select — placeholder process image">
+  <defs>
+  <filter id="grain" x="0" y="0" width="100%" height="100%">
+    <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="3" stitchTiles="stitch" result="n"/>
+    <feColorMatrix in="n" type="saturate" values="0"/>
+    <feComponentTransfer><feFuncA type="linear" slope="0.055"/></feComponentTransfer>
+  </filter>
+  <filter id="blur" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="22"/></filter>
+  <filter id="blur6" x="-40%" y="-40%" width="180%" height="180%"><feGaussianBlur stdDeviation="6"/></filter>
+</defs>
+  <rect width="600" height="700" fill="#efe3cf"/>
+  <circle cx="470" cy="140" r="170" fill="#fff8ea" opacity=".45"/>
+  <ellipse cx="300" cy="560" rx="210" ry="46" fill="#2a140b" opacity=".14" filter="url(#blur)"/>
+  <g transform="translate(300 380) rotate(-12)">
+    <ellipse rx="82" ry="50.839999999999996" fill="#4b2517"/>
+    <ellipse cx="-14.76" cy="-13.120000000000001" rx="41" ry="21.32" fill="#7a4630" opacity=".55"/>
+    <path d="M -61.5 0 Q 0 14.76 61.5 0" stroke="#2a120a" stroke-width="9.84" fill="none" opacity=".6"/>
+  </g><g transform="translate(400 460) rotate(24)">
+    <ellipse rx="54" ry="33.48" fill="#4b2517"/>
+    <ellipse cx="-9.719999999999999" cy="-8.64" rx="27" ry="14.040000000000001" fill="#7a4630" opacity=".55"/>
+    <path d="M -40.5 0 Q 0 9.719999999999999 40.5 0" stroke="#2a120a" stroke-width="6.4799999999999995" fill="none" opacity=".6"/>
+  </g><g transform="translate(200 470) rotate(6)">
+    <ellipse rx="50" ry="31" fill="#4b2517"/>
+    <ellipse cx="-9" cy="-8" rx="25" ry="13" fill="#7a4630" opacity=".55"/>
+    <path d="M -37.5 0 Q 0 9 37.5 0" stroke="#2a120a" stroke-width="6" fill="none" opacity=".6"/>
+  </g>
+  <text x="300" y="640" text-anchor="middle" font-family="Georgia, serif" font-size="13" letter-spacing="5" fill="#5a3a28" opacity=".7">01 · SELECT</text>
+  <rect width="600" height="700" filter="url(#grain)" opacity=".55"/>
+</svg>
