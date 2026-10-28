@@ -495,6 +495,9 @@ The schema was never applied. Check the build log for `prisma migrate deploy`, c
 **`Timed out trying to acquire a postgres advisory lock`**
 A migration ran through a pooler. `DATABASE_URL_UNPOOLED` must be the direct (non-pooled) hostname; `directUrl` in `prisma/schema.prisma` points Prisma Migrate at it.
 
+**`authentication error: server did not use channel binding`**
+Neon's generated URL includes `channel_binding=require`, which needs TLS end to end. Remove `&channel_binding=require` from the `DATABASE_URL` value (keep `sslmode=require`) if a proxy or pooler terminates TLS.
+
 **Port 3000 already in use**
 `npm run dev -- -p 3001`, then set `NEXT_PUBLIC_SITE_URL="http://localhost:3001"` and restart. `scripts/shots.mjs` and the E2E scripts assume port 3001.
 
