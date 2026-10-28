@@ -8,7 +8,7 @@ web
 
 ## Stack
 
-delegated: Next.js 16 (App Router) + TypeScript, Tailwind CSS v4, Prisma + SQLite for local development (PostgreSQL-ready schema), custom server-verified admin sessions. Chosen because the brief requires one persistent application with a public storefront, protected dashboard, server actions, and no external service dependency for the demo.
+delegated: Next.js 16 (App Router) + TypeScript, Tailwind CSS v4, Prisma + PostgreSQL (Neon on Vercel), custom server-verified admin sessions. Chosen because the brief requires one persistent application with a public storefront, protected dashboard, server actions, and a database that survives serverless deploys.
 
 ## Users
 
@@ -42,7 +42,7 @@ Real cocoa beans, minimal ingredients, honest labeling, and small-batch craft â€
 - Transactional email is not configured. The UI must not claim an email was sent.
 - All prices, weights, and photographs are labeled placeholders until the owner supplies real values.
 - No nutrition facts, certifications, health claims, or cocoa-percentage claims beyond the supplied product names are invented.
-- SQLite is a development database. Production requires PostgreSQL and a documented migration; the schema avoids SQLite-only types.
+- PostgreSQL is the only supported database; the committed migrations are applied by `prisma migrate deploy` on each deploy.
 
 ## Brand Commitments
 

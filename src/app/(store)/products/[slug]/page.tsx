@@ -7,6 +7,7 @@ import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { collectionLabel, getProductBySlug, getRelatedProducts } from "@/lib/catalog";
 import { getSettings } from "@/lib/settings";
+import { siteUrl } from "@/lib/site";
 
 type Params = { slug: string };
 
@@ -43,7 +44,6 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
       : [{ id: product.id, url: product.imageUrl, alt: `${product.name} — placeholder photograph` }];
 
   const inStock = product.variants.some((variant) => variant.stock > 0);
-  const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
   const jsonLd = {
     "@context": "https://schema.org",

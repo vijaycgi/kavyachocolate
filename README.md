@@ -4,7 +4,7 @@ A complete, no-payment storefront and operations dashboard for a four-bar, bean-
 
 Shoppers browse four bars, choose a size, check out as a guest with courier shipping, Bengaluru local delivery, or studio pickup, and receive an order number. The owner signs in to a server-protected admin to move orders through fulfilment, adjust stock, manage products and customers, configure shipping and pickup, and edit store settings. **No card details are collected and no payment gateway is connected.** Ordering records a request to buy; payment is arranged offline.
 
-Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 + SQLite** for local development. The schema is PostgreSQL-ready.
+Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 + PostgreSQL**.
 
 ---
 
@@ -80,20 +80,20 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 
 ## Quick start
 
-**Requirements:** Node.js 20+ (tested on Node 24), npm. No external services required for local development.
+**Requirements:** Node.js 20+ (tested on Node 24), npm, and a PostgreSQL database. A free Neon database is enough, and the same database can back local development and production.
 
 ```bash
 git clone https://github.com/vijaycgi/kavyachocolate.git
 cd kavyachocolate
 npm install
 cp .env.example .env        # Windows PowerShell: Copy-Item .env.example .env
-npx prisma generate
-npm run db:push             # creates prisma/dev.db
+# paste DATABASE_URL (pooled) and DATABASE_URL_UNPOOLED (direct) into .env
+npx prisma migrate deploy   # create the tables
 npm run db:seed             # admin, products, settings, zones, pickup
 npm run dev
 ```
 
-The SQLite database (`prisma/dev.db`) and `.env` are intentionally not tracked; `db:push` and `db:seed` build a fresh local database.
+`.env` is intentionally not tracked. The schema, seed, and migrations are, so a fresh clone can rebuild an empty database with the two commands above.
 
 Open <http://localhost:3000>. Admin is at <http://localhost:3000/admin/login>.
 
@@ -115,11 +115,13 @@ Change this password immediately in **Admin → Settings → Password**, and set
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Development server with Turbopack. |
-| `npm run build` | Production build. |
+| `npm run build` | Production build (no database connection required). |
+| `npm run vercel-build` | What Vercel runs: `prisma generate`, `migrate deploy`, `next build`. |
 | `npm start` | Serve the production build. |
-| `npm run db:push` | Sync Prisma schema to the database (development). |
+| `npm run db:deploy` | Apply committed migrations to the database. |
+| `npm run db:push` | Sync the schema without a migration (prototyping only). |
 | `npm run db:seed` | Idempotent seed of products, settings, zones, pickup, and the admin. |
-| `npm run db:reset` | **Destructive.** Drop, recreate, and re-seed the development database. |
+| `npm run db:reset` | **Destructive.** Drop, recreate, and re-seed the database. Never against production. |
 | `npm run lint` | ESLint. |
 | `npx tsc --noEmit` | Type check without emitting. |
 
@@ -131,11 +133,12 @@ Copy `.env.example` to `.env`. Never commit `.env` or a real database file.
 
 | Variable | Required | Example | Notes |
 | --- | --- | --- | --- |
-| `DATABASE_URL` | Yes | `file:./dev.db` | SQLite path for development. For production, a PostgreSQL URL. |
+| `DATABASE_URL` | Yes | `postgresql://…@ep-x-pooler.…neon.tech/neondb?sslmode=require` | Pooled connection used by the app. |
+| `DATABASE_URL_UNPOOLED` | Yes | `postgresql://…@ep-x.…neon.tech/neondb?sslmode=require` | Direct connection used by the Prisma CLI for migrations. |
 | `ADMIN_EMAIL` | On first seed | `admin@kavya.local` | Used only when creating the admin. |
 | `ADMIN_PASSWORD` | On first seed | `ChangeMe123!` | Hashed with bcrypt (cost 12). Change after first sign-in. |
 | `ADMIN_NAME` | On first seed | `Kavya Chocolat Owner` | Display name in the admin shell. |
-| `NEXT_PUBLIC_SITE_URL` | Yes in production | `https://kavya.example` | Absolute metadata, canonical URLs, sitemap, robots, structured data. No trailing slash. |
+| `NEXT_PUBLIC_SITE_URL` | Optional on Vercel | `https://kavya.example` | Absolute metadata, canonical URLs, sitemap, robots, structured data. No trailing slash. Falls back to the Vercel deployment domain, then `http://localhost:3000`. |
 
 There are no other runtime secrets. `server-only` guards the database, auth, order, and fulfilment modules from client bundling.
 
@@ -143,58 +146,28 @@ There are no other runtime secrets. `server-only` guards the database, auth, ord
 
 ## Database
 
-The development database is SQLite at `prisma/dev.db`. `DATABASE_URL="file:./dev.db"` is resolved relative to `prisma/`, so Prisma writes `prisma/dev.db`.
+The project uses PostgreSQL everywhere — local development, previews, and production — so there is no second dialect to test against. `prisma/schema.prisma` is the source of truth and `prisma/migrations/` holds the committed SQL.
 
 ### Development
 
 ```bash
-npm run db:push   # apply schema
+npm run db:deploy # apply committed migrations
 npm run db:seed   # seed / refresh catalogue and settings
-npm run db:reset  # wipe + recreate + seed
+npm run db:reset  # wipe + recreate + seed (destructive)
 ```
 
-`prisma db push` is used because this project ships without a migration history. That is fine for local development but **not** the recommended production path.
+Point `DATABASE_URL` at any Postgres database (a Neon branch is a good fit). Use `DATABASE_URL_UNPOOLED` for the direct connection so `migrate` does not run through a transaction pooler.
 
-### Production (PostgreSQL)
+### Production
 
-1. Provision PostgreSQL (Neon, Supabase, RDS, a managed instance, etc.).
-2. Change the datasource provider in `prisma/schema.prisma`:
+```bash
+npm run db:deploy  # prisma migrate deploy
+npm run db:seed    # first deploy only, with production admin values
+```
 
-   ```prisma
-   datasource db {
-     provider = "postgresql"
-     url      = env("DATABASE_URL")
-   }
-   ```
+`vercel-build` runs `prisma generate && prisma migrate deploy && next build`, so each Vercel deployment applies any new migrations before the app goes live. Seeding is deliberately **not** part of the build: the seed would reset variant stock to its catalogue defaults on every deploy.
 
-3. Set `DATABASE_URL` to the PostgreSQL connection string (include `sslmode=require` where required).
-4. Create the initial migration and commit it:
-
-   ```bash
-   npx prisma migrate dev --name init
-   ```
-
-5. In deployment, apply migrations before starting:
-
-   ```bash
-   npx prisma migrate deploy
-   npx prisma generate
-   npm run build
-   npm start
-   ```
-
-6. Seed once with production-safe values:
-
-   ```bash
-   ADMIN_EMAIL="owner@yourdomain.com" \
-   ADMIN_PASSWORD="<strong unique password>" \
-   ADMIN_NAME="Owner name" \
-   npm run db:seed
-   ```
-
-The schema avoids SQLite-only column types. JSON-ish fields (`countries`, `postalCodes`) are stored as JSON strings and parsed in `src/lib/fulfillment.ts`; they port cleanly to PostgreSQL `text`.
-
-> **SQLite in production:** possible only with a persistent volume and a single application instance. Serverless platforms lose the filesystem. Use PostgreSQL for any real deployment.
+> **SQLite is not supported by this build.** It cannot run on Vercel's read-only, ephemeral filesystem, and the datasource provider is `postgresql`.
 
 ---
 
@@ -338,42 +311,45 @@ Both scripts hard-code `http://localhost:3001` and `C:\Program Files\Google\Chro
 
 ## Deployment
 
-### Option A: Vercel + PostgreSQL (recommended)
+### Option A: Vercel + Neon (recommended)
 
-1. Push the project to a Git repository.
-2. Create a PostgreSQL database (Neon/Supabase/Vercel Postgres).
-3. Switch the Prisma provider to `postgresql`, run `npx prisma migrate dev --name init` locally, and commit `prisma/migrations/`.
-4. Import the repo into Vercel.
-5. Set environment variables:
-   - `DATABASE_URL`
-   - `NEXT_PUBLIC_SITE_URL` (the production HTTPS URL)
-   - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (first seed only)
-6. Set the build command to apply migrations, generate the client, and build:
+1. Push the project to GitHub (already done for this repo).
+2. In the Vercel project: **Storage → Create Database → Neon**. Choose the free plan and connect it to the project. The integration injects `DATABASE_URL` (pooled) and `DATABASE_URL_UNPOOLED` (direct) into Production, Preview, and Development.
+3. Set the remaining variables under **Settings → Environment Variables**:
+   - `NEXT_PUBLIC_SITE_URL` = `https://<your-production-domain>` (optional; the deployment domain is used as a fallback)
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (for the first seed only)
+4. Redeploy. `npm run vercel-build` generates the client, applies `prisma/migrations/`, and builds.
+5. Seed once. Either run it locally against the production database:
 
    ```bash
-   npx prisma migrate deploy && npx prisma generate && next build
+   $env:DATABASE_URL="<production pooled url>"
+   $env:DATABASE_URL_UNPOOLED="<production direct url>"
+   $env:ADMIN_PASSWORD="<strong unique password>"
+   npm run db:seed
    ```
 
-7. Seed once from a local shell pointed at the production `DATABASE_URL`, or run `npm run db:seed` as a one-off job.
-8. Sign in, change the password, and replace placeholder settings/products.
+   or temporarily add a one-off script in the Vercel dashboard. Do not wire the seed into the build.
+6. Sign in at `/admin/login`, change the password, and replace placeholder settings/products.
+
+Every later deploy applies new migrations automatically. Create them locally with `npx prisma migrate dev --name <change>` and commit the generated folder.
 
 ### Option B: Node host with a persistent disk
 
 ```bash
 npm ci
 npx prisma migrate deploy
-npx prisma generate
 npm run build
 npm start          # defaults to port 3000; set PORT if needed
 ```
 
-Put a reverse proxy (Caddy/nginx) with HTTPS in front. Production cookies are `secure`, so **HTTPS is required** or admin sign-in will not persist. Keep one instance if you insist on SQLite with a mounted volume; otherwise use PostgreSQL.
+Put a reverse proxy (Caddy/nginx) with HTTPS in front. Production cookies are `secure`, so **HTTPS is required** or admin sign-in will not persist.
 
 ### Deployment notes
 
-- `NEXT_PUBLIC_SITE_URL` must be the final HTTPS origin, or canonical URLs, sitemap entries, and structured data will point at localhost.
+- A 500 on every storefront page after deploying almost always means the database is unreachable: check that `DATABASE_URL` and `DATABASE_URL_UNPOOLED` exist in the Vercel environment and that the migration ran in the build log.
+- `NEXT_PUBLIC_SITE_URL` should be the final HTTPS origin, or canonical URLs, sitemap entries, and structured data will use the Vercel domain (or localhost locally).
 - Admin routes and API routes use the Node.js runtime (Prisma). Do not deploy to an edge-only runtime.
-- Back up the database before seeding or destructive changes. The seed is idempotent for products/settings but does not delete orders.
+- Back up the database before seeding or destructive changes. The seed is idempotent for products/settings but does not delete orders, and it resets variant stock.
 - `npm run db:reset` is destructive. Never run it against production.
 - No payment or email secrets are needed. If you add either later, use server-only env vars and keep them out of `NEXT_PUBLIC_*`.
 
@@ -468,7 +444,7 @@ kavya-chocolat/
 ├─ prisma/
 │  ├─ schema.prisma        # data model
 │  ├─ seed.ts              # admin, products, settings, zones, pickup
-│  └─ dev.db               # local SQLite database (do not commit)
+│  └─ migrations/          # committed SQL migrations (PostgreSQL)
 ├─ public/images/
 │  ├─ kavya-chocolat-logo.svg
 │  ├─ products/            # placeholder product photography
@@ -510,11 +486,14 @@ kavya-chocolat/
 
 ## Troubleshooting
 
-**`PrismaClientInitializationError` / "Unable to open the database file"**
-Run `npm run db:push` from the project root. `DATABASE_URL="file:./dev.db"` is relative to `prisma/`.
+**`PrismaClientInitializationError` / "Environment variable not found: DATABASE_URL"**
+Copy `.env.example` to `.env` and paste both Postgres URLs. The app reads `DATABASE_URL`; the Prisma CLI reads `DATABASE_URL_UNPOOLED` for migrations. On Vercel, confirm both variables exist for the environment you deployed.
 
-**"The table `main.Product` does not exist"**
-The schema exists but the database is empty. Run `npm run db:push && npm run db:seed`.
+**"The table `public.Product` does not exist" / every page 500s on Vercel**
+The schema was never applied. Check the build log for `prisma migrate deploy`, confirm the database variables are present, then redeploy. Seeding is separate and only needed once.
+
+**`Timed out trying to acquire a postgres advisory lock`**
+A migration ran through a pooler. `DATABASE_URL_UNPOOLED` must be the direct (non-pooled) hostname; `directUrl` in `prisma/schema.prisma` points Prisma Migrate at it.
 
 **Port 3000 already in use**
 `npm run dev -- -p 3001`, then set `NEXT_PUBLIC_SITE_URL="http://localhost:3001"` and restart. `scripts/shots.mjs` and the E2E scripts assume port 3001.

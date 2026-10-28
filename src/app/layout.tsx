@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from "next";
 import { Sen } from "next/font/google";
 import "./globals.css";
+import { siteUrl } from "@/lib/site";
 
 // One family, three registers. Sen's variable 400–800 carries display headings,
 // body, labels, tables, tabular figures, and the margin notes; hierarchy comes
@@ -10,8 +11,6 @@ const sen = Sen({
   variable: "--font-sen",
   display: "swap",
 });
-
-const siteUrl = process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000";
 
 export const metadata: Metadata = {
   metadataBase: new URL(siteUrl),

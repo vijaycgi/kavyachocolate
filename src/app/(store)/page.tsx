@@ -5,6 +5,7 @@ import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
 import { getFeaturedProducts } from "@/lib/catalog";
 import { getSettings } from "@/lib/settings";
+import { siteUrl } from "@/lib/site";
 
 export const metadata: Metadata = {
   title: { absolute: "Kavya Chocolat — Four bars. Nothing to hide." },
@@ -35,7 +36,7 @@ export default async function HomePage() {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Kavya Chocolat",
-    url: process.env.NEXT_PUBLIC_SITE_URL ?? "http://localhost:3000",
+    url: siteUrl,
     logo: "/images/kavya-chocolat-logo.svg",
     email: settings["store.email"],
     description:
