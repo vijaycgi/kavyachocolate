@@ -1,13 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { connection } from "next/server";
 
 export const metadata: Metadata = {
   title: "Page not found",
   description: "This page has melted away. Browse the four Kavya Chocolat bars instead.",
 };
 
-export default function NotFound() {
+export default async function NotFound() {
+  // A nonce CSP requires a request-time render so the proxy can supply the nonce.
+  await connection();
+
   return (
     <main className="flex min-h-screen flex-col items-center justify-center px-6 py-16 text-center">
       <Link href="/" aria-label="Kavya Chocolat — home">

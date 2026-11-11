@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
 import { ChevronRight, PackageCheck, ShieldCheck, Truck } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
@@ -47,6 +48,8 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
   const { slug } = await params;
   const [product, settings] = await Promise.all([getProductBySlug(slug), getSettings()]);
   if (!product) notFound();
+
+  const nonce = (await headers()).get("x-nonce") ?? undefined;
 
   const related = await getRelatedProducts(product.slug);
   const images = buildProductGalleryImages(
@@ -100,10 +103,12 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
     <div className="page pb-20 pt-6 sm:pt-8">
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 

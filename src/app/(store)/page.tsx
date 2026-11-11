@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { headers } from "next/headers";
 import { ArrowRight, ArrowUpRight } from "lucide-react";
 import { ProductCard } from "@/components/store/product-card";
 import { getFeaturedProducts } from "@/lib/catalog";
@@ -30,7 +31,12 @@ const steps = [
 ];
 
 export default async function HomePage() {
-  const [products, settings] = await Promise.all([getFeaturedProducts(), getSettings()]);
+  const [products, settings, requestHeaders] = await Promise.all([
+    getFeaturedProducts(),
+    getSettings(),
+    headers(),
+  ]);
+  const nonce = requestHeaders.get("x-nonce") ?? undefined;
 
   const instagram = settings["store.instagram"]?.trim();
   // Only advertise a real profile; the shipped default is instagram.com itself.
@@ -52,6 +58,7 @@ export default async function HomePage() {
     <>
       <script
         type="application/ld+json"
+        nonce={nonce}
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
       />
 

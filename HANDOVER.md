@@ -55,9 +55,11 @@ commit once the database-backed checks below have run against a real PostgreSQL 
 - Redirect safety centralised in `src/lib/redirects.ts` (`safeInternalPath`, `safeAccountNext`,
   `safeAdminNext`) and covered by tests.
 - Tracking links render only for `http(s)` URLs.
-- Security headers for every route in `next.config.ts`: same-origin CSP, `X-Frame-Options: DENY`,
-  `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, and
-  `X-Powered-By` disabled.
+- Security headers on every response: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`,
+  `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, and `X-Powered-By` disabled in
+  `next.config.ts`. The CSP is generated per request in `src/proxy.ts` with a nonce
+  (`script-src 'nonce-…' 'strict-dynamic'`, no `'unsafe-inline'`), which requires dynamic
+  rendering for HTML routes.
 
 ---
 
@@ -172,7 +174,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs `tsx --test "tests/**/*.test.ts"` (44 tests, Node's built-in runner; no extra
+`npm test` runs `tsx --test "tests/**/*.test.ts"` (47 tests, Node's built-in runner; no extra
 test framework).
 
 Local build note: `npm run build` runs migrations first. With an unreachable database, use a
@@ -191,9 +193,9 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
 
 - `npx tsc --noEmit` — clean.
 - `npm run lint` — clean.
-- `npm test` — 44/44 passing (redirect safety, password policy, register/login/checkout/
-  address/admin schemas, field-error helpers, gallery ordering/composition, media limits and
-  filename sanitising).
+- `npm test` — 47/47 passing (redirect safety, password policy, register/login/checkout/
+  address/admin schemas, field-error helpers, gallery ordering/composition, CSP nonce,
+  media limits and filename sanitising).
 - `npx next build` — compiled successfully, TypeScript passed, 40 routes emitted.
 - Product photo uploads — verified against a local PostgreSQL database: admin sign-in, file
   picker change event, `/api/admin/uploads` 201 with a 1200×1500 WebP, `/api/media/[id]` 200
@@ -204,6 +206,9 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
   `addProductImageAction`, the up arrow reordered rows and the order survived a reload, deleting
   a row compacted the remaining positions and removed its now-unreferenced `MediaAsset`, and the
   storefront showed the main image first with gallery URLs in JSON-LD.
+- Nonce-based CSP — verified locally on the home, shop, product, cart, checkout, account login,
+  admin product editor and 404 pages: no CSP console errors, every inline script carries the
+  per-request nonce, and gallery reordering still hydrates and calls its server action.
 
 ## 8. Not verified here (requires external services)
 

@@ -66,7 +66,7 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 - Database-backed rate limiting for customer login, registration, password reset, and admin sign-in.
 - Custom admin sessions: random 256-bit tokens, SHA-256 hashes in the database, `httpOnly` + `SameSite=Lax` cookies, 7-day expiry, secure cookies in production.
 - `src/proxy.ts` performs optimistic redirects, but **every admin and account layout, page, server action, and API path re-checks the session on the server**. Hiding navigation is never treated as security.
-- Security headers are set for every route in `next.config.ts`: a same-origin CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, and `X-Powered-By` disabled.
+- Security headers are applied on every response: `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, and `X-Powered-By` disabled in `next.config.ts`. The CSP is generated per request in `src/proxy.ts` with a nonce, so `script-src` uses `'nonce-…'` and `'strict-dynamic'` instead of `'unsafe-inline'`.
 - Money is stored as integer **paise**, never floats.
 - Inventory decrements in the same transaction that creates an order and is restored on cancellation.
 - WCAG 2.2 AA-minded markup: keyboard-operable menus, visible focus, labelled fields, 44px+ mobile targets, reduced-motion support.
