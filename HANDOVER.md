@@ -196,7 +196,7 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
 - `npm test` — 47/47 passing (redirect safety, password policy, register/login/checkout/
   address/admin schemas, field-error helpers, gallery ordering/composition, CSP nonce,
   media limits and filename sanitising).
-- `npx next build` — compiled successfully, TypeScript passed, 40 routes emitted.
+- `npx next build` — compiled successfully, TypeScript passed, all routes emitted.
 - Product photo uploads — verified against a local PostgreSQL database: admin sign-in, file
   picker change event, `/api/admin/uploads` 201 with a 1200×1500 WebP, `/api/media/[id]` 200
   with `image/webp` and immutable caching, product save persisted the new path, unauthenticated
@@ -209,12 +209,11 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
 - Nonce-based CSP — verified locally on the home, shop, product, cart, checkout, account login,
   admin product editor and 404 pages: no CSP console errors, every inline script carries the
   per-request nonce, and gallery reordering still hydrates and calls its server action.
+- Production deploy (`63a6615`) — the gallery is live, production pages hydrate without CSP
+  console errors, and securityheaders.com reports **A+** with a nonce-based `script-src`.
 
 ## 8. Not verified here (requires external services)
 
-- `prisma migrate deploy` against the real Neon database — the configured host was unreachable
-  from this machine and no local PostgreSQL was available. **Apply and verify the migration
-  before deploying.**
 - End-to-end Google sign-in — needs real client credentials and registered redirect URIs.
 - Resend email delivery — needs a verified sender/domain and API key.
 - Cross-customer order access, session expiry, rate-limit lockout and guest-order claiming are
