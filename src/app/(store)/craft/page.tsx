@@ -2,12 +2,21 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
+import { socialMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Our craft",
   description:
     "How Kavya Chocolat makes bean-to-bar chocolate: selecting cocoa beans, roasting, refining, tempering and moulding in small batches.",
   alternates: { canonical: "/craft" },
+  ...socialMetadata({
+    title: "Our craft · Kavya Chocolat",
+    description:
+      "How Kavya Chocolat makes bean-to-bar chocolate: selecting cocoa beans, roasting, refining, tempering and moulding in small batches.",
+    path: "/craft",
+    image: "/images/editorial/atelier.jpg",
+    imageAlt: "Chocolate being made by hand",
+  }),
 };
 
 const steps = [

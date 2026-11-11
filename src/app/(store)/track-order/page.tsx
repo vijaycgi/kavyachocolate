@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ArrowRight, Mail, PackageSearch } from "lucide-react";
+import { socialMetadata } from "@/lib/metadata";
 import { getOrderForTracking } from "@/lib/orders";
 
 export const metadata: Metadata = {
@@ -9,6 +10,12 @@ export const metadata: Metadata = {
   description:
     "Look up a Kavya Chocolat order with the order number and the email used at checkout.",
   alternates: { canonical: "/track-order" },
+  ...socialMetadata({
+    title: "Track an order · Kavya Chocolat",
+    description:
+      "Look up a Kavya Chocolat order with the order number and the email used at checkout.",
+    path: "/track-order",
+  }),
 };
 
 type Search = { order?: string; error?: string };

@@ -3,13 +3,14 @@ import { prisma } from "@/lib/db";
 import { siteUrl as base } from "@/lib/site";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const now = new Date();
+  // Static pages have no stored update timestamp. Omitting lastModified is
+  // honest; stamping every request with "now" teaches crawlers to ignore it.
   const staticRoutes: MetadataRoute.Sitemap = [
-    { url: base, lastModified: now, changeFrequency: "weekly", priority: 1 },
-    { url: `${base}/shop`, lastModified: now, changeFrequency: "weekly", priority: 0.9 },
-    { url: `${base}/craft`, lastModified: now, changeFrequency: "monthly", priority: 0.6 },
-    { url: `${base}/policies`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
-    { url: `${base}/track-order`, lastModified: now, changeFrequency: "yearly", priority: 0.3 },
+    { url: base, changeFrequency: "weekly", priority: 1 },
+    { url: `${base}/shop`, changeFrequency: "weekly", priority: 0.9 },
+    { url: `${base}/craft`, changeFrequency: "monthly", priority: 0.6 },
+    { url: `${base}/policies`, changeFrequency: "yearly", priority: 0.3 },
+    { url: `${base}/track-order`, changeFrequency: "yearly", priority: 0.3 },
   ];
 
   try {

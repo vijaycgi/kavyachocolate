@@ -699,16 +699,40 @@ export function CheckoutForm({
               stored on this site.
             </span>
           </p>
+          <p className="mt-3">
+            By sending this request you agree to our{" "}
+            <Link
+              href="/policies#shipping"
+              className="underline underline-offset-2 hover:text-burgundy"
+            >
+              shipping
+            </Link>
+            ,{" "}
+            <Link
+              href="/policies#returns"
+              className="underline underline-offset-2 hover:text-burgundy"
+            >
+              returns
+            </Link>{" "}
+            and{" "}
+            <Link
+              href="/policies#privacy"
+              className="underline underline-offset-2 hover:text-burgundy"
+            >
+              privacy
+            </Link>{" "}
+            policies.
+          </p>
         </div>
 
         <div className="lg:hidden">
           <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
             {submitting ? (
               <>
-                <Loader2 size={15} className="animate-spin" aria-hidden /> Placing order…
+                <Loader2 size={15} className="animate-spin" aria-hidden /> Sending request…
               </>
             ) : (
-              <>Place order — {formatMoney(displayTotal)}</>
+              <>Send order request — {formatMoney(displayTotal)}</>
             )}
           </button>
           <p className="mt-2 text-center text-[10px] uppercase tracking-[0.12em] text-ink-2">
@@ -775,11 +799,11 @@ export function CheckoutForm({
         >
           {submitting ? (
             <>
-              <Loader2 size={15} className="animate-spin" aria-hidden /> Placing order…
+              <Loader2 size={15} className="animate-spin" aria-hidden /> Sending request…
             </>
           ) : (
             <>
-              Place order <ArrowRight size={15} aria-hidden />
+              Send order request <ArrowRight size={15} aria-hidden />
             </>
           )}
         </button>

@@ -31,11 +31,12 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
                 Shop
               </p>
               <ul className="space-y-2.5 text-sm text-paper/85">
-                <li><Link className="hover:text-paper" href="/shop">All bars</Link></li>
-                <li><Link className="hover:text-paper" href="/shop?collection=CLASSIC">Classic 70%</Link></li>
-                <li><Link className="hover:text-paper" href="/shop?collection=DRY_FRUIT">With dry fruits</Link></li>
-                <li><Link className="hover:text-paper" href="/shop?collection=JAGGERY">Jaggery-sweetened</Link></li>
-                <li><Link className="hover:text-paper" href="/craft">Our craft</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/shop">All bars</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/shop?collection=CLASSIC">Classic 70%</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/shop?collection=DRY_FRUIT">With dry fruits</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/shop?collection=JAGGERY">Jaggery-sweetened</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/shop?collection=JAGGERY_DRY_FRUIT">Jaggery + dry fruits</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/craft">Our craft</Link></li>
               </ul>
             </div>
 
@@ -44,11 +45,11 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
                 Help
               </p>
               <ul className="space-y-2.5 text-sm text-paper/85">
-                <li><Link className="hover:text-paper" href="/track-order">Track an order</Link></li>
-                <li><Link className="hover:text-paper" href="/policies#shipping">Shipping</Link></li>
-                <li><Link className="hover:text-paper" href="/policies#returns">Returns</Link></li>
-                <li><Link className="hover:text-paper" href="/policies#privacy">Privacy</Link></li>
-                <li><Link className="hover:text-paper" href="/policies">All policies</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/track-order">Track an order</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/policies#shipping">Shipping</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/policies#returns">Returns</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/policies#privacy">Privacy</Link></li>
+                <li><Link className="inline-block py-1 hover:text-paper" href="/policies">All policies</Link></li>
               </ul>
             </div>
 
@@ -58,19 +59,19 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
               </p>
               <ul className="space-y-2.5 text-sm text-paper/85">
                 <li>
-                  <a className="hover:text-paper" href={`mailto:${settings["store.email"]}`}>
+                  <a className="inline-block py-1 hover:text-paper" href={`mailto:${settings["store.email"]}`}>
                     {settings["store.email"]}
                   </a>
                 </li>
                 <li>
-                  <a className="hover:text-paper" href={`tel:${settings["store.phone"].replace(/\s/g, "")}`}>
+                  <a className="inline-block py-1 hover:text-paper" href={`tel:${settings["store.phone"].replace(/\s/g, "")}`}>
                     {settings["store.phone"]}
                   </a>
                 </li>
                 <li className="text-paper/80">{settings["store.address"]}</li>
                 <li>
                   <a
-                    className="inline-flex items-center gap-1 hover:text-paper"
+                    className="inline-flex items-center gap-1 py-1 hover:text-paper"
                     href={settings["store.instagram"]}
                     rel="noreferrer noopener"
                     target="_blank"
@@ -97,9 +98,6 @@ export function SiteFooter({ settings }: { settings: StoreSettings }) {
             </div>
             <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
               <span>© {new Date().getFullYear()} Kavya Chocolat</span>
-              <Link href="/admin/login" className="text-paper/75 hover:text-paper">
-                Admin
-              </Link>
             </div>
           </div>
         </div>

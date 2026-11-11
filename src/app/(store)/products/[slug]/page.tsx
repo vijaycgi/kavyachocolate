@@ -26,9 +26,19 @@ export async function generateMetadata({
     description: `${product.tagline} ${product.description}`.slice(0, 158),
     alternates: { canonical: `/products/${product.slug}` },
     openGraph: {
+      type: "website",
+      locale: "en_IN",
+      siteName: "Kavya Chocolat",
+      url: `${siteUrl}/products/${product.slug}`,
       title: `${product.name} · Kavya Chocolat`,
       description: product.tagline,
       images: [{ url: product.imageUrl, width: 1200, height: 1500, alt: product.name }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: `${product.name} · Kavya Chocolat`,
+      description: product.tagline,
+      images: [product.imageUrl],
     },
   };
 }
@@ -66,11 +76,35 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
     })),
   };
 
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    itemListElement: [
+      { "@type": "ListItem", position: 1, name: "Shop", item: `${siteUrl}/shop` },
+      {
+        "@type": "ListItem",
+        position: 2,
+        name: collectionLabel(product.collection),
+        item: `${siteUrl}/shop?collection=${encodeURIComponent(product.collection)}`,
+      },
+      {
+        "@type": "ListItem",
+        position: 3,
+        name: product.name,
+        item: `${siteUrl}/products/${product.slug}`,
+      },
+    ],
+  };
+
   return (
     <div className="page pb-20 pt-6 sm:pt-8">
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
       />
 
       <nav aria-label="Breadcrumb" className="mb-6 flex items-center gap-1.5 text-[10px] uppercase tracking-[0.14em] text-ink-2">

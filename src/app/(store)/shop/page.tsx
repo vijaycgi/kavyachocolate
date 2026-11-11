@@ -2,12 +2,21 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { ProductCard } from "@/components/store/product-card";
 import { collectionLabel, getStoreProducts } from "@/lib/catalog";
+import { socialMetadata } from "@/lib/metadata";
 
 export const metadata: Metadata = {
   title: "Shop all bars",
   description:
     "Four bean-to-bar dark chocolate bars: classic 70%, 70% with cashews and pistachios, jaggery-sweetened, and jaggery with dry fruits.",
   alternates: { canonical: "/shop" },
+  ...socialMetadata({
+    title: "Shop all bars · Kavya Chocolat",
+    description:
+      "Four bean-to-bar dark chocolate bars: classic 70%, 70% with cashews and pistachios, jaggery-sweetened, and jaggery with dry fruits.",
+    path: "/shop",
+    image: "/images/editorial/collection.jpg",
+    imageAlt: "The Kavya Chocolat collection",
+  }),
 };
 
 const collections = [
@@ -119,6 +128,8 @@ export default async function ShopPage({
           ))}
         </div>
       </div>
+
+      <h2 className="sr-only">The bars</h2>
 
       <div className="mt-8 flex items-baseline justify-between">
         <p className="text-[10px] uppercase tracking-[0.16em] text-ink-2">

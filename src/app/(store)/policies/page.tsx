@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { getFulfillmentOptions } from "@/lib/fulfillment";
+import { socialMetadata } from "@/lib/metadata";
 import { formatMoney } from "@/lib/money";
 import { getSettings } from "@/lib/settings";
 
@@ -9,6 +10,14 @@ export const metadata: Metadata = {
   description:
     "Kavya Chocolat shipping, local delivery, pickup, returns and privacy information. Placeholder policies pending review before launch.",
   alternates: { canonical: "/policies" },
+  ...socialMetadata({
+    title: "Policies & shipping · Kavya Chocolat",
+    description:
+      "Shipping, local delivery, pickup, returns and privacy information for Kavya Chocolat orders.",
+    path: "/policies",
+    image: "/images/editorial/beans.jpg",
+    imageAlt: "Cocoa beans",
+  }),
 };
 
 export default async function PoliciesPage() {

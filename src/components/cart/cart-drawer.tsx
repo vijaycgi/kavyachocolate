@@ -10,31 +10,69 @@ import { formatMoney } from "@/lib/money";
 export function CartDrawer() {
   const { lines, open, closeCart, setQuantity, removeLine, subtotalMinor, count } = useCart();
   const closeRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLElement>(null);
   const previousFocus = useRef<HTMLElement | null>(null);
 
   useEffect(() => {
-    if (open) {
-      previousFocus.current = document.activeElement as HTMLElement | null;
-      const timer = window.setTimeout(() => closeRef.current?.focus(), 30);
-      const onKeyDown = (event: KeyboardEvent) => {
-        if (event.key === "Escape") closeCart();
-      };
-      document.addEventListener("keydown", onKeyDown);
-      document.body.style.overflow = "hidden";
-      return () => {
-        window.clearTimeout(timer);
-        document.removeEventListener("keydown", onKeyDown);
-        document.body.style.overflow = "";
-        previousFocus.current?.focus?.();
-      };
-    }
-    return undefined;
+    if (!open) return undefined;
+
+    previousFocus.current = document.activeElement as HTMLElement | null;
+    const timer = window.setTimeout(() => closeRef.current?.focus(), 30);
+
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        closeCart();
+        return;
+      }
+      if (event.key !== "Tab") return;
+
+      const panel = panelRef.current;
+      if (!panel) return;
+
+      // Keep Tab inside the sheet while it is modal. Links in the closed
+      // drawer are already removed from the tab order by `inert`.
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>(
+          'a[href], button:not([disabled]), input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        ),
+      ).filter(
+        (element) => element.tabIndex >= 0 && element.getAttribute("aria-hidden") !== "true",
+      );
+
+      if (focusable.length === 0) return;
+
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      const active = document.activeElement as HTMLElement | null;
+
+      if (event.shiftKey) {
+        if (!active || active === first || !panel.contains(active)) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (!active || active === last || !panel.contains(active)) {
+        event.preventDefault();
+        first.focus();
+      }
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      window.clearTimeout(timer);
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = "";
+      previousFocus.current?.focus?.();
+    };
   }, [open, closeCart]);
 
   return (
     <div
       className={`fixed inset-0 z-50 ${open ? "pointer-events-auto" : "pointer-events-none"}`}
       aria-hidden={!open}
+      inert={!open}
     >
       <button
         type="button"
@@ -46,6 +84,7 @@ export function CartDrawer() {
         }`}
       />
       <section
+        ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-label="Your bag"

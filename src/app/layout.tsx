@@ -33,6 +33,7 @@ export const metadata: Metadata = {
     type: "website",
     locale: "en_IN",
     siteName: "Kavya Chocolat",
+    url: siteUrl,
     title: "Kavya Chocolat — Four bars. Nothing to hide.",
     description:
       "Bean-to-bar chocolate made in small batches with real cocoa beans, cashews, pistachios and jaggery.",
@@ -42,6 +43,7 @@ export const metadata: Metadata = {
     card: "summary_large_image",
     title: "Kavya Chocolat — Four bars. Nothing to hide.",
     description: "Bean-to-bar chocolate made in small batches.",
+    images: ["/images/editorial/hero.jpg"],
   },
   robots: { index: true, follow: true },
 };

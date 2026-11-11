@@ -32,15 +32,20 @@ const steps = [
 export default async function HomePage() {
   const [products, settings] = await Promise.all([getFeaturedProducts(), getSettings()]);
 
+  const instagram = settings["store.instagram"]?.trim();
+  // Only advertise a real profile; the shipped default is instagram.com itself.
+  const sameAs = instagram && /instagram\.com\/[^/]+/.test(instagram) ? [instagram] : undefined;
+
   const jsonLd = {
     "@context": "https://schema.org",
     "@type": "Organization",
     name: "Kavya Chocolat",
     url: siteUrl,
-    logo: "/images/kavya-chocolat-logo.svg",
+    logo: `${siteUrl}/images/kavya-chocolat-logo.svg`,
     email: settings["store.email"],
     description:
       "Small-batch bean-to-bar chocolate made in India with real cocoa beans.",
+    ...(sameAs ? { sameAs } : {}),
   };
 
   return (

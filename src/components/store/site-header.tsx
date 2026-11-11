@@ -88,17 +88,18 @@ export function SiteHeader({
               type="button"
               onClick={openCart}
               className="group flex min-h-11 items-center gap-2 border-l border-line/70 pl-3 text-[11px] font-medium uppercase tracking-[0.17em] text-ink transition-colors hover:text-burgundy sm:pl-5"
-              aria-label={`Open bag${count > 0 ? `, ${count} ${count === 1 ? "item" : "items"}` : ""}`}
             >
               <ShoppingBag size={17} strokeWidth={1.6} aria-hidden />
-              <span className="hidden sm:inline">Bag</span>
-              <span
-                className={`num flex size-[1.15rem] items-center justify-center rounded-full text-[9px] ${
-                  count > 0 ? "bg-burgundy text-paper" : "bg-paper-2 text-ink-2"
-                }`}
-                aria-hidden
-              >
-                {count}
+              <span className="sr-only sm:not-sr-only">Bag</span>{" "}
+              <span className="flex items-center" aria-live="polite">
+                <span
+                  className={`num flex size-[1.15rem] items-center justify-center rounded-full text-[9px] ${
+                    count > 0 ? "bg-burgundy text-paper" : "bg-paper-2 text-ink-2"
+                  }`}
+                >
+                  {count}
+                </span>
+                <span className="sr-only"> {count === 1 ? "item" : "items"} in bag</span>
               </span>
             </button>
           </div>

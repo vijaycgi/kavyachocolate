@@ -1,5 +1,11 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+
+export const metadata: Metadata = {
+  title: "Page not found",
+  description: "This page has melted away. Browse the four Kavya Chocolat bars instead.",
+};
 
 export default function NotFound() {
   return (
