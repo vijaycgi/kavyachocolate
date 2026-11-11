@@ -66,6 +66,22 @@ model ProductImage {
   @@index([productId])
 }
 
+// Admin-uploaded product photography. Bytes live in Postgres so uploads work on
+// Vercel without an external bucket; rows are immutable and served from
+// /api/media/[id] with a long-lived cache header.
+model MediaAsset {
+  id        String   @id @default(cuid())
+  filename  String
+  mimeType  String
+  sizeBytes Int
+  width     Int?
+  height    Int?
+  data      Bytes
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+}
+
 model Variant {
   id                   String   @id @default(cuid())
   productId            String

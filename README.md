@@ -53,7 +53,7 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 **Admin** (`/admin`, all server-verified)
 - Dashboard with today's stats, low stock, and recent orders.
 - Orders list with search and status filters; order detail with allowed status transitions, tracking fields, notes, and cancellation (restores stock).
-- Products and variants: create, edit, publish, price, stock, ingredients, allergens, images.
+- Products and variants: create, edit, publish, price, stock, ingredients, allergens, and photography uploaded straight from the browser or referenced as a local `/public` path.
 - Inventory ledger: every manual adjustment and every order movement is recorded with the resulting stock.
 - Customers with order history and lifetime value.
 - Shipping zones, local delivery areas, pickup locations, free-shipping threshold.
@@ -429,6 +429,17 @@ Put a reverse proxy (Caddy/nginx) with HTTPS in front. Production cookies are `s
 - `npm run db:reset` is destructive. Never run it against production.
 - No payment or email secrets are needed. If you add either later, use server-only env vars and keep them out of `NEXT_PUBLIC_*`.
 
+### Product image uploads
+
+Admins can upload product photography from the product edit page (**Photography → Browse…**). Uploaded files are:
+
+- accepted as JPEG, PNG, WebP or AVIF, up to 4 MB;
+- auto-oriented, capped at 2000 px on the long edge, and re-encoded to WebP with `sharp` (EXIF and other metadata are stripped);
+- stored in the `MediaAsset` table in Postgres, not on the deployment filesystem, because Vercel's filesystem is ephemeral;
+- served immutably from `/api/media/[id]` with a one-year cache header, then optimised by `next/image` like any local asset.
+
+The text path fields still work for files under `public/`. Uploads are admin-only, verify the bytes server-side, and reject renamed non-images. A replaced image is a new asset; old rows are not deleted automatically, so abandoned uploads can be pruned from `MediaAsset` if storage becomes a concern. For a very large catalogue, swap the storage layer for object storage (Vercel Blob, S3) while keeping the same `/api/admin/uploads` contract.
+
 ---
 
 ## Placeholders you must replace
@@ -440,7 +451,7 @@ These are intentionally shipped as placeholders and are labelled as such in the 
 | Prices | ₹480 / ₹540 / ₹520 / ₹590 (70 g); ₹980 / ₹1,100 / ₹1,060 / ₹1,200 (150 g) | Admin → Products → variant prices |
 | Weights | 70 g and 150 g | Admin → Products → variants |
 | SKUs | `KC-C70-070` … `KC-JDF-150` | Admin → Products |
-| Product photography | Pexels/Unsplash stock, labelled "placeholder photograph" in alt text | Replace files in `public/images/products/` and update product image paths |
+| Product photography | Pexels/Unsplash stock, labelled "placeholder photograph" in alt text | Upload replacements in Admin → Products → Photography, or replace files in `public/images/products/` |
 | Editorial photography | Stock still life | Replace in `public/images/editorial/` |
 | Store email | `hello@kavya.example` | Admin → Settings |
 | Store phone | `+91 00000 00000` | Admin → Settings |

@@ -117,9 +117,9 @@ export default async function AdminProductsPage({
       )}
 
       <p className="text-[10.5px] leading-relaxed text-ink-2">
-        Prices are stored in paise. Product photos are image paths under /public; use a landscape
-        or portrait crop at least 1200px tall. Placeholder photography must be replaced before
-        launch.
+        Prices are stored in paise. Upload product photos from the edit page, or point the path at a
+        file under /public. Use a landscape or portrait crop at least 1200px tall. Placeholder
+        photography must be replaced before launch.
       </p>
     </div>
   );

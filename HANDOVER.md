@@ -89,6 +89,10 @@ Auth pages live under `src/app/(store)/account/(auth)/`; dashboard pages under
 
 Migration: `prisma/migrations/20261029120000_customer_accounts/migration.sql`
 
+Separate later migration: `prisma/migrations/20261111120000_media_assets/migration.sql` adds
+`MediaAsset`, which stores admin-uploaded product photos as WebP bytes in Postgres and serves
+them from `/api/media/[id]`.
+
 New model `Customer` columns/relations:
 - `name`, `phone`, `passwordHash`, `emailVerifiedAt`, timestamps
 - relations: sessions, tokens, OAuth accounts, addresses, orders
@@ -185,9 +189,13 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
 
 - `npx tsc --noEmit` — clean.
 - `npm run lint` — clean.
-- `npm test` — 23/23 passing (redirect safety, password policy, register/login/checkout/
-  address/admin schemas, field-error helpers).
-- `npx next build` — compiled successfully, TypeScript passed, 38 routes emitted.
+- `npm test` — 34/34 passing (redirect safety, password policy, register/login/checkout/
+  address/admin schemas, field-error helpers, media limits and filename sanitising).
+- `npx next build` — compiled successfully, TypeScript passed, 40 routes emitted.
+- Product photo uploads — verified against a local PostgreSQL database: admin sign-in, file
+  picker change event, `/api/admin/uploads` 201 with a 1200×1500 WebP, `/api/media/[id]` 200
+  with `image/webp` and immutable caching, product save persisted the new path, unauthenticated
+  upload returned 401 and a spoofed `.jpg` returned 415.
 
 ## 8. Not verified here (requires external services)
 
