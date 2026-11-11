@@ -3,13 +3,14 @@ import { CartDrawer } from "@/components/cart/cart-drawer";
 import { CartProvider } from "@/components/cart/cart-provider";
 import { SiteFooter } from "@/components/store/site-footer";
 import { SiteHeader } from "@/components/store/site-header";
+import { getCustomer } from "@/lib/customer-auth";
 import { getSettings } from "@/lib/settings";
 
 // Store content, prices and stock are database-backed and must not be baked at build time.
 export const dynamic = "force-dynamic";
 
 export default async function StoreLayout({ children }: { children: ReactNode }) {
-  const settings = await getSettings();
+  const [settings, customer] = await Promise.all([getSettings(), getCustomer()]);
 
   return (
     <CartProvider>
@@ -19,7 +20,7 @@ export default async function StoreLayout({ children }: { children: ReactNode })
       >
         Skip to content
       </a>
-      <SiteHeader announcement={settings["store.announcement"]} />
+      <SiteHeader announcement={settings["store.announcement"]} signedIn={Boolean(customer)} />
       <main id="main" className="flex-1">
         {children}
       </main>

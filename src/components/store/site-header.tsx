@@ -4,7 +4,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useState } from "react";
-import { Menu, ShoppingBag, X } from "lucide-react";
+import { Menu, ShoppingBag, UserRound, X } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
 
 const links = [
@@ -14,7 +14,13 @@ const links = [
   { href: "/policies", label: "Policies" },
 ];
 
-export function SiteHeader({ announcement }: { announcement: string }) {
+export function SiteHeader({
+  announcement,
+  signedIn,
+}: {
+  announcement: string;
+  signedIn: boolean;
+}) {
   const pathname = usePathname();
   const { count, openCart } = useCart();
   const [openForPath, setOpenForPath] = useState<string | null>(null);
@@ -70,6 +76,14 @@ export function SiteHeader({ announcement }: { announcement: string }) {
           </Link>
 
           <div className="flex items-center justify-end gap-1 sm:gap-3">
+            <Link
+              href={signedIn ? "/account" : "/account/login"}
+              className="flex min-h-11 items-center gap-2 text-[11px] font-medium uppercase tracking-[0.17em] text-ink transition-colors hover:text-burgundy"
+              aria-label={signedIn ? "Your account" : "Sign in to your account"}
+            >
+              <UserRound size={17} strokeWidth={1.6} aria-hidden />
+              <span className="hidden sm:inline">{signedIn ? "Account" : "Sign in"}</span>
+            </Link>
             <button
               type="button"
               onClick={openCart}
@@ -109,6 +123,13 @@ export function SiteHeader({ announcement }: { announcement: string }) {
                 className="py-4 text-[11px] font-medium uppercase tracking-[0.17em] text-burgundy"
               >
                 View bag ({count})
+              </Link>
+              <Link
+                href={signedIn ? "/account" : "/account/login"}
+                onClick={() => setOpenForPath(null)}
+                className="py-4 text-[11px] font-medium uppercase tracking-[0.17em] text-ink-2"
+              >
+                {signedIn ? "Your account" : "Sign in or create an account"}
               </Link>
             </nav>
           </div>

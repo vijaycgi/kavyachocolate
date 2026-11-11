@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { getCustomer } from "@/lib/customer-auth";
 import { OrderError, placeOrder } from "@/lib/orders";
 
 export const runtime = "nodejs";
@@ -26,14 +27,21 @@ export async function POST(request: Request) {
   }
 
   try {
-    const result = await placeOrder(body);
+    const account = await getCustomer();
+    const result = await placeOrder(
+      body,
+      account ? { id: account.id, email: account.email } : null,
+    );
     return NextResponse.json(result, {
       status: 201,
       headers: { "Cache-Control": "no-store" },
     });
   } catch (error) {
     if (error instanceof OrderError) {
-      return NextResponse.json({ error: error.message }, { status: error.status });
+      return NextResponse.json(
+        { error: error.message, fieldErrors: error.fieldErrors },
+        { status: error.status },
+      );
     }
     console.error("order route failed", error);
     return NextResponse.json(

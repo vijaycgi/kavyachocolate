@@ -248,13 +248,22 @@ Photography is cropped in upright 4:5 (product cards, product plates) or 3:4/4:3
 
 - **Style:** cream ground, 1px hairline, 2px corners, 48px minimum height, 1rem Sen text (16px keeps iOS from zooming on focus). Labels sit above in 11px uppercase Soft Cocoa.
 - **Focus:** border shifts to burgundy with a 3px 14%-burgundy halo; the native outline is removed only when this substitute is present.
-- **Error:** a form-level alert with a burgundy border, 5%-burgundy ground, and 14px burgundy text, marked `role="alert"`. Field borders do not turn red; the message names the problem and the field keeps its normal focus treatment. Disabled fields drop to 60% opacity.
+- **Error:** field-level errors render a 12px burgundy message directly under the field, and the invalid field takes a burgundy border with `aria-invalid="true"` and `aria-describedby` pointing at the message. A form-level alert with a burgundy border, 5%-burgundy ground, and 14px burgundy text summarises the failure and is marked `role="alert"`. The first invalid field receives focus. Disabled and read-only fields drop to 60% opacity.
 
 ### Navigation
 
 - **Storefront header:** cream ground with a thin bottom rule, logo left, uppercase 11px links with `0.17em` tracking, bag action on the right behind a hairline divider. A burgundy announcement bar sits above it. Mobile uses a full-width slide-down menu with 44px rows.
 - **Footer:** solid burgundy field with the knockout logo, a display-weight closing line, and three ruled link columns. Text on burgundy is paper at 75–80% opacity minimum.
 - **Admin:** burgundy rail with a 2px brass left border on the active item and paper text; inactive items at 80% paper. Mobile replaces the rail with a slide-over panel and a 40px menu button.
+- **Account:** the storefront header gains a quiet `Account`/`Sign in` action beside the bag. Signed-in pages use the same cream paper, hairline panels and ruled section headings as checkout. Auth screens use a two-column paper/burgundy split at `lg`, collapsing to a single paper column on mobile, with the logo as the only ornament.
+
+### Account and authentication
+
+- **Character:** the account area is a ledger, not a dashboard product. Cream panels, ruled headings, tabular numbers, and the same 11px uppercase labels as checkout.
+- **Google:** the secondary button uses the same hairline geometry as the outline button, with the Google mark at 16px. When unconfigured it is visibly disabled and carries an explanatory note; it never pretends to sign in.
+- **Verification:** unverified email is a brass-toned advisory panel, not an error. Verified state uses the store's quiet green (`#4f6144`) with a check mark.
+- **Orders:** line items show the snapshotted product name, variant, SKU and price at order time. Status history filters internal staff notes; tracking links render only when they are `http(s)` URLs.
+- **Security:** sessions are listed as plain rows with the current browser marked by a tag. Destructive actions (unlink Google, sign out other sessions, remove address) use the existing confirm-before-submit control.
 
 ### Product Purchase Panel
 

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckoutForm } from "@/components/store/checkout-form";
+import { getCustomer } from "@/lib/customer-auth";
+import { prisma } from "@/lib/db";
 import { getFulfillmentOptions } from "@/lib/fulfillment";
 import { getSettings } from "@/lib/settings";
 
@@ -11,7 +13,18 @@ export const metadata: Metadata = {
 };
 
 export default async function CheckoutPage() {
-  const [options, settings] = await Promise.all([getFulfillmentOptions(), getSettings()]);
+  const [options, settings, customer] = await Promise.all([
+    getFulfillmentOptions(),
+    getSettings(),
+    getCustomer(),
+  ]);
+
+  const savedAddress = customer
+    ? await prisma.address.findFirst({
+        where: { customerId: customer.id, orderId: null, isDefault: true },
+        orderBy: { createdAt: "desc" },
+      })
+    : null;
 
   return (
     <div className="page pb-20 pt-10 sm:pt-14">
@@ -36,6 +49,24 @@ export default async function CheckoutPage() {
         </p>
       </div>
 
+      {customer ? (
+        <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border border-line bg-cream px-4 py-3 text-[11.5px] text-ink-2">
+          Signed in as <strong className="font-medium text-ink">{customer.email}</strong>. This
+          order will appear in your account history.
+          <Link href="/account" className="text-burgundy underline underline-offset-2">
+            Account
+          </Link>
+        </p>
+      ) : (
+        <p className="mt-5 flex flex-wrap items-center gap-x-2 gap-y-1 border border-line bg-cream px-4 py-3 text-[11.5px] text-ink-2">
+          Checking out as a guest.
+          <Link href="/account/login?next=%2Fcheckout" className="text-burgundy underline underline-offset-2">
+            Sign in
+          </Link>
+          to keep this order in your account.
+        </p>
+      )}
+
       <CheckoutForm
         countries={options.countries}
         pickups={options.pickups.map((pickup) => ({
@@ -50,6 +81,25 @@ export default async function CheckoutPage() {
         }))}
         pickupNote={settings["store.pickupNote"]}
         taxLabel={settings["store.taxLabel"]}
+        account={
+          customer
+            ? { name: customer.name, email: customer.email, phone: customer.phone ?? "" }
+            : null
+        }
+        savedAddress={
+          savedAddress
+            ? {
+                line1: savedAddress.line1,
+                line2: savedAddress.line2 ?? "",
+                city: savedAddress.city,
+                state: savedAddress.state ?? "",
+                postalCode: savedAddress.postalCode,
+                country: savedAddress.country,
+                name: savedAddress.name,
+                phone: savedAddress.phone ?? "",
+              }
+            : null
+        }
       />
     </div>
   );

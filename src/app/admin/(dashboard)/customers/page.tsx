@@ -26,35 +26,52 @@ export default async function AdminCustomersPage({
           ],
         }
       : {},
-    include: {
-      orders: {
-        select: { status: true, totalMinor: true, createdAt: true, orderNumber: true },
-        orderBy: { createdAt: "desc" },
-      },
-    },
     orderBy: { createdAt: "desc" },
     take: 100,
   });
 
-  const totalCustomers = await prisma.customer.count();
-  const allOrders = customers.flatMap((customer) => customer.orders);
-  const revenue = allOrders
-    .filter((order) => order.status !== "CANCELLED")
-    .reduce((sum, order) => sum + order.totalMinor, 0);
-  const repeat = customers.filter((customer) => customer.orders.length > 1).length;
+  // Guest orders deliberately keep customerId null until the address is
+  // verified, so order history is grouped by the stored order email.
+  const [orderTotals, validTotals, totalCustomers] = await Promise.all([
+    prisma.order.groupBy({
+      by: ["email"],
+      _count: { _all: true },
+      _max: { createdAt: true },
+    }),
+    prisma.order.groupBy({
+      by: ["email"],
+      where: { status: { not: "CANCELLED" } },
+      _sum: { totalMinor: true },
+    }),
+    prisma.customer.count(),
+  ]);
+
+  const countByEmail = new Map(
+    orderTotals.map((row) => [
+      row.email.toLowerCase(),
+      { count: row._count._all, lastOrder: row._max.createdAt },
+    ]),
+  );
+  const spendByEmail = new Map(
+    validTotals.map((row) => [row.email.toLowerCase(), row._sum.totalMinor ?? 0]),
+  );
+  const revenue = validTotals.reduce((sum, row) => sum + (row._sum.totalMinor ?? 0), 0);
+  const repeat = customers.filter(
+    (customer) => (countByEmail.get(customer.email.toLowerCase())?.count ?? 0) > 1,
+  ).length;
 
   return (
     <div className="space-y-6">
       <PageHeader
         eyebrow="Customers"
         title="Who orders the chocolate."
-        description="Customer records are created at guest checkout from the order details. There are no customer accounts or passwords."
+        description="Customer records are created by guest checkout and by account registration. Guest orders stay grouped by email until the customer verifies the address."
       />
 
       <Flash saved={params.saved} error={params.error} />
 
       <div className="grid gap-3 sm:grid-cols-3">
-        <StatCard label="Customers" value={String(totalCustomers)} detail="Unique emails that placed an order" />
+        <StatCard label="Customers" value={String(totalCustomers)} detail="Accounts and guest records" />
         <StatCard label="Repeat customers" value={String(repeat)} detail="More than one order" />
         <StatCard label="Revenue · listed" value={formatMoney(revenue)} detail="Excludes cancelled orders" />
       </div>
@@ -103,12 +120,19 @@ export default async function AdminCustomersPage({
             </thead>
             <tbody>
               {customers.map((customer) => {
-                const valid = customer.orders.filter((order) => order.status !== "CANCELLED");
-                const spent = valid.reduce((sum, order) => sum + order.totalMinor, 0);
+                const key = customer.email.toLowerCase();
+                const stats = countByEmail.get(key);
                 return (
                   <tr key={customer.id}>
                     <td>
-                      <p className="font-medium">{customer.name}</p>
+                      <p className="font-medium">
+                        {customer.name}
+                        {customer.passwordHash || customer.emailVerifiedAt ? (
+                          <span className="ml-2 align-middle text-[9px] font-semibold uppercase tracking-[0.1em] text-brass-ink">
+                            Account
+                          </span>
+                        ) : null}
+                      </p>
                       <p className="text-[11px] text-ink-2">
                         <a href={`mailto:${customer.email}`} className="hover:text-burgundy">{customer.email}</a>
                         {customer.phone ? ` · ${customer.phone}` : ""}
@@ -116,12 +140,12 @@ export default async function AdminCustomersPage({
                     </td>
                     <td>
                       <Link href={`/admin/orders?q=${encodeURIComponent(customer.email)}`} className="num text-burgundy hover:underline">
-                        {customer.orders.length}
+                        {stats?.count ?? 0}
                       </Link>
                     </td>
-                    <td className="num">{formatMoney(spent)}</td>
+                    <td className="num">{formatMoney(spendByEmail.get(key) ?? 0)}</td>
                     <td className="text-[11.5px] text-ink-2">
-                      {customer.orders[0] ? formatDate(customer.orders[0].createdAt) : "—"}
+                      {stats?.lastOrder ? formatDate(stats.lastOrder) : "—"}
                     </td>
                     <td className="text-[11.5px] text-ink-2">{formatDate(customer.createdAt)}</td>
                   </tr>
@@ -133,7 +157,7 @@ export default async function AdminCustomersPage({
       )}
 
       <p className="text-[10.5px] leading-relaxed text-ink-2">
-        Revenue is based on the customers listed above and excludes cancellations. Customer data
+        Revenue is based on all orders grouped by email and excludes cancellations. Customer data
         should be handled according to the privacy policy and applicable law.
       </p>
     </div>

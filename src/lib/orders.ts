@@ -7,6 +7,8 @@ import { getSettings } from "./settings";
 import { quoteFulfillment } from "./fulfillment";
 import {
   checkoutSchema,
+  fieldErrorsFromZod,
+  firstFieldError,
   statusLabels,
   statusTransitions,
   type OrderStatus,
@@ -14,9 +16,15 @@ import {
 
 export class OrderError extends Error {
   status: number;
-  constructor(message: string, status = 400) {
+  fieldErrors?: Record<string, string>;
+  constructor(
+    message: string,
+    status = 400,
+    fieldErrors?: Record<string, string>,
+  ) {
     super(message);
     this.status = status;
+    this.fieldErrors = fieldErrors;
   }
 }
 
@@ -27,7 +35,15 @@ export const orderInclude = {
   pickupLocation: true,
 } satisfies Prisma.OrderInclude;
 
+export const customerOrderInclude = {
+  items: { orderBy: { name: "asc" } },
+  events: { orderBy: { createdAt: "desc" } },
+  address: true,
+  pickupLocation: true,
+} satisfies Prisma.OrderInclude;
+
 export type OrderWithDetail = Prisma.OrderGetPayload<{ include: typeof orderInclude }>;
+export type CustomerOrderDetail = Prisma.OrderGetPayload<{ include: typeof customerOrderInclude }>;
 
 function generateOrderNumber() {
   const now = new Date();
@@ -43,14 +59,20 @@ function generateAccessKey() {
   return randomBytes(18).toString("base64url");
 }
 
-export async function placeOrder(raw: unknown) {
+export async function placeOrder(
+  raw: unknown,
+  account?: { id: string; email: string } | null,
+) {
   const parsed = checkoutSchema.safeParse(raw);
   if (!parsed.success) {
-    const first = parsed.error.issues[0];
-    throw new OrderError(first?.message ?? "Check the details and try again.");
+    const fieldErrors = fieldErrorsFromZod(parsed.error);
+    throw new OrderError(firstFieldError(fieldErrors), 400, fieldErrors);
   }
 
   const input = parsed.data;
+  // An authenticated order is owned by the session account. The email is
+  // taken from the account, never from a field the browser can edit.
+  if (account) input.email = account.email;
   const settings = await getSettings();
 
   const existing = await prisma.order.findUnique({
@@ -134,11 +156,19 @@ export async function placeOrder(raw: unknown) {
         });
         if (duplicate) return duplicate;
 
-        const customer = await tx.customer.upsert({
-          where: { email: input.email },
-          update: { name: input.name, phone: input.phone },
-          create: { email: input.email, name: input.name, phone: input.phone },
-        });
+        if (account) {
+          await tx.customer.update({
+            where: { id: account.id },
+            data: { phone: input.phone },
+          });
+        } else {
+          await tx.customer.upsert({
+            where: { email: input.email },
+            // Never overwrite an existing profile from a guest checkout.
+            update: {},
+            create: { email: input.email, name: input.name, phone: input.phone },
+          });
+        }
 
         for (const line of lines) {
           const updated = await tx.variant.updateMany({
@@ -156,7 +186,9 @@ export async function placeOrder(raw: unknown) {
           data: {
             orderNumber,
             accessKey,
-            customerId: customer.id,
+            // Guest orders stay unassigned until the mailbox is verified and
+            // claimed. This prevents email-only account linking.
+            customerId: account?.id ?? null,
             email: input.email,
             name: input.name,
             phone: input.phone,
@@ -258,6 +290,26 @@ export async function getOrderByAccess(orderNumber: string, accessKey: string) {
   return prisma.order.findFirst({
     where: { orderNumber, accessKey },
     include: orderInclude,
+  });
+}
+
+/** Ownership is part of the query, never a client-side check. */
+export async function getCustomerOrder(customerId: string, idOrNumber: string) {
+  return prisma.order.findFirst({
+    where: {
+      customerId,
+      OR: [{ id: idOrNumber }, { orderNumber: idOrNumber.toUpperCase() }],
+    },
+    include: customerOrderInclude,
+  });
+}
+
+export async function getCustomerOrders(customerId: string, take = 50) {
+  return prisma.order.findMany({
+    where: { customerId },
+    include: { items: { orderBy: { name: "asc" } } },
+    orderBy: { createdAt: "desc" },
+    take,
   });
 }
 

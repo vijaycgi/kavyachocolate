@@ -2,7 +2,9 @@
 
 A complete, no-payment storefront and operations dashboard for a four-bar, bean-to-bar chocolate studio.
 
-Shoppers browse four bars, choose a size, check out as a guest with courier shipping, Bengaluru local delivery, or studio pickup, and receive an order number. The owner signs in to a server-protected admin to move orders through fulfilment, adjust stock, manage products and customers, configure shipping and pickup, and edit store settings. **No card details are collected and no payment gateway is connected.** Ordering records a request to buy; payment is arranged offline.
+Shoppers browse four bars, choose a size, check out as a guest or sign in to an optional customer account, and receive an order number. The owner signs in to a server-protected admin to move orders through fulfilment, adjust stock, manage products and customers, configure shipping and pickup, and edit store settings. **No card details are collected and no payment gateway is connected.** Ordering records a request to buy; payment is arranged offline.
+
+Customer accounts add registration, email/password sign-in, optional Google sign-in, email verification, password reset, saved addresses, and an ownership-scoped order history. Guest checkout remains fully supported. Guest orders stay unassigned until the customer verifies the mailbox, so an email address alone can never expose someone else's orders.
 
 Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 + PostgreSQL**.
 
@@ -20,6 +22,7 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 - [Database](#database)
 - [Routes](#routes)
 - [How an order works](#how-an-order-works)
+- [Customer accounts](#customer-accounts)
 - [Admin access](#admin-access)
 - [Testing](#testing)
 - [Deployment](#deployment)
@@ -37,6 +40,7 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 - Home, shop, product detail, cart, checkout, order-success, track-order, craft/story, and policies pages.
 - Four seeded products with two weight variants each (70 g and 150 g), real stock counts, ingredients, allergens, and tasting copy.
 - Guest checkout. No account required.
+- Optional customer accounts: register, sign in, Google sign-in when configured, verify email, reset password, saved addresses, profile, password rotation, session list, and order history scoped to the signed-in customer.
 - Three fulfilment methods:
   - **Courier shipping** by country zone, with a free-shipping threshold.
   - **Local delivery** by postal-code area, with a minimum order value.
@@ -57,8 +61,12 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 - Settings: store identity, contact, announcement, tax label/rate, policies, admin password rotation.
 
 **Platform**
+- Separate customer and admin identity: `CustomerSession` and `Session` tables, different cookies (`kavya_customer_session`, `kavya_admin_session`). Registering as a customer never grants admin access.
+- Customer passwords use bcrypt (cost 12) and a minimum-10-character policy with letter/number checks. Tokens are random 256-bit values stored as SHA-256 hashes.
+- Database-backed rate limiting for customer login, registration, password reset, and admin sign-in.
 - Custom admin sessions: random 256-bit tokens, SHA-256 hashes in the database, `httpOnly` + `SameSite=Lax` cookies, 7-day expiry, secure cookies in production.
-- `src/proxy.ts` performs optimistic redirects, but **every admin layout, page, server action, and admin API path re-checks the session on the server**. Hiding navigation is never treated as security.
+- `src/proxy.ts` performs optimistic redirects, but **every admin and account layout, page, server action, and API path re-checks the session on the server**. Hiding navigation is never treated as security.
+- Security headers are set for every route in `next.config.ts`: a same-origin CSP, `X-Frame-Options: DENY`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`, `Permissions-Policy`, COOP/CORP, and `X-Powered-By` disabled.
 - Money is stored as integer **paise**, never floats.
 - Inventory decrements in the same transaction that creates an order and is restored on cancellation.
 - WCAG 2.2 AA-minded markup: keyboard-operable menus, visible focus, labelled fields, 44px+ mobile targets, reduced-motion support.
@@ -72,10 +80,10 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 | Not included | Consequence |
 | --- | --- |
 | Payment gateway / card fields / payment webhooks | Orders have **fulfilment status**, not payment status. Never show "paid". Arrange payment by email/phone or bank transfer offline. |
-| Transactional email | No order confirmation email is sent. The success screen and admin are the record. Do not change UI copy to claim an email was sent until an email provider is wired in. |
+| Transactional email | Account verification and password-reset email is sent only when `RESEND_API_KEY` and `EMAIL_FROM` are configured. Without them the flows still work, links are logged in development, and the UI says delivery is not configured. No order confirmation email is sent. |
 | Tax calculation | Defaults to 0%, labelled **"Tax (not configured)"**. Set a rate and label in Admin → Settings only after confirming your tax obligations. |
 | Courier API | Tracking numbers/URLs are entered manually in the admin. Checkout ETAs are estimates, not guarantees. |
-| Customer accounts | Checkout is guest-only. Customers are created/updated from orders for the owner's records. |
+| Payment or identity providers other than optional Google OAuth | Customer accounts use email/password plus optional Google sign-in. Admin accounts are always separate and password-only. |
 | Reviews, ratings, certifications, nutrition panels | None are invented. Add only verified claims. |
 | Real product photography, final prices, final weights | Seeded values and stock photos are placeholders. See [Placeholders](#placeholders-you-must-replace). |
 
@@ -126,6 +134,7 @@ Change this password immediately in **Admin → Settings → Password**, and set
 | `npm run db:seed` | Idempotent seed of products, settings, zones, pickup, and the admin. |
 | `npm run db:reset` | **Destructive.** Drop, recreate, and re-seed the database. Never against production. |
 | `npm run lint` | ESLint. |
+| `npm test` | Node test runner (via `tsx`) for validation schemas and redirect safety. |
 | `npx tsc --noEmit` | Type check without emitting. |
 
 ---
@@ -141,9 +150,13 @@ Copy `.env.example` to `.env`. Never commit `.env` or a real database file.
 | `ADMIN_EMAIL` | On first seed | `admin@kavya.local` | Used only when creating the admin. |
 | `ADMIN_PASSWORD` | On first seed | `ChangeMe123!` | Hashed with bcrypt (cost 12). Change after first sign-in. |
 | `ADMIN_NAME` | On first seed | `Kavya Chocolat Owner` | Display name in the admin shell. |
-| `NEXT_PUBLIC_SITE_URL` | Optional on Vercel | `https://kavya.example` | Absolute metadata, canonical URLs, sitemap, robots, structured data. No trailing slash. Falls back to the Vercel deployment domain, then `http://localhost:3000`. |
+| `NEXT_PUBLIC_SITE_URL` | Optional on Vercel | `https://kavya.example` | Absolute metadata, canonical URLs, sitemap, robots, structured data, and account email links. No trailing slash. Falls back to the Vercel deployment domain, then `http://localhost:3000`. |
+| `RESEND_API_KEY` | Optional | `re_…` | Enables account verification and password-reset email via Resend's HTTPS API. |
+| `EMAIL_FROM` | Optional | `Kavya Chocolat <accounts@your-domain.example>` | Verified sender for Resend. Both email variables are required for delivery. |
+| `GOOGLE_CLIENT_ID` | Optional | `…apps.googleusercontent.com` | Enables Google sign-in. Without it the Google button is disabled with an explanation. |
+| `GOOGLE_CLIENT_SECRET` | Optional | `GOCSPX-…` | Server-only. Never expose to the browser. Both Google variables are required. |
 
-There are no other runtime secrets. `server-only` guards the database, auth, order, and fulfilment modules from client bundling.
+There are no other runtime secrets. `server-only` guards the database, auth, order, and fulfilment modules from client bundling; the Google client secret is only read inside route handlers.
 
 ---
 
@@ -186,17 +199,35 @@ npm run db:seed    # first deploy only, with production admin values
 | `/craft` | Process, ingredient philosophy, studio context. |
 | `/policies` | Shipping, returns, privacy from DB settings. |
 | `/cart` | Client cart, quantity edits, subtotal. |
-| `/checkout` | Guest details, fulfilment method, live server quote, order placement. |
+| `/checkout` | Guest or signed-in details, fulfilment method, live server quote, order placement. Signed-in orders attach to the account. |
 | `/order-success` | Order receipt with number, totals, fulfilment details, tracking link. |
 | `/track-order` | Look up status by order number + checkout email. |
 | `/sitemap.xml`, `/robots.txt`, `/manifest.webmanifest` | Generated metadata routes. |
+
+### Customer account
+
+| Route | Purpose |
+| --- | --- |
+| `/account` | Dashboard: greeting, verification prompt, saved-order summary, quick links. Requires a session. |
+| `/account/login` | Email/password sign-in and optional Google button. |
+| `/account/register` | Registration with server-side validation. Never grants admin access. |
+| `/account/forgot-password` | Request a reset link (same response for known and unknown emails). |
+| `/account/reset-password` | Set a new password from a single-use token. |
+| `/account/verify-email` | Consume a verification token and claim matching guest orders. |
+| `/account/profile` | Edit name and phone; email is the account identity. |
+| `/account/orders` | Order history scoped to the signed-in customer. |
+| `/account/orders/[orderId]` | Order detail from snapshotted line items; ownership is part of the query. |
+| `/account/addresses` | Saved delivery addresses, default selection, edit/remove. |
+| `/account/security` | Password, email verification, linked Google account, active sessions. |
 
 ### API
 
 | Route | Method | Purpose |
 | --- | --- | --- |
 | `/api/checkout/quote` | `POST` | Validates cart against DB, computes authoritative subtotal + shipping + total. No side effects. |
-| `/api/orders` | `POST` | Validates checkout, re-prices, checks stock, creates the order + items + address + customer + inventory movements + event in one transaction. Rejects duplicate idempotency keys by returning the existing order. |
+| `/api/orders` | `POST` | Validates checkout, re-prices, checks stock, creates the order + items + address + customer + inventory movements + event in one transaction. Uses the customer session when present and forces the account email. Rejects duplicate idempotency keys by returning the existing order. |
+| `/api/auth/google/start` | `GET` | Starts the OAuth authorization-code + PKCE flow when credentials are configured. |
+| `/api/auth/google/callback` | `GET` | Validates state, exchanges the code, rejects unverified provider emails, and links or creates an account. |
 
 ### Admin
 
@@ -225,7 +256,8 @@ Every admin page calls `requireAdmin()` (directly or through the dashboard layou
 2. **Quote before submit.** `/api/checkout/quote` loads variants from the database, rejects unpublished/inactive items and insufficient stock, and computes subtotal + fulfilment fee from admin-configured rules. Displayed prices are never trusted.
 3. **Submit.** `/api/orders` parses with Zod, checks the idempotency key first, re-loads variants, re-checks stock and shipping eligibility, re-quotes fulfilment, and computes all totals server-side.
 4. **Transaction.** One Prisma transaction:
-   - creates/updates the `Customer` by email,
+   - for a signed-in order, updates the account phone and sets `Order.customerId`; the email is taken from the session, not the form,
+   - for a guest order, creates or reuses a `Customer` record by email but leaves `Order.customerId` **null**,
    - creates the `Order` with snapshotted prices (`OrderItem.unitPriceMinor`, `lineTotalMinor`, product/variant names, SKU, image),
    - decrements each variant's stock,
    - writes an `InventoryMovement` per line with `stockAfter`,
@@ -256,6 +288,38 @@ Countries outside configured zones are rejected with a clear message. There is n
 
 ---
 
+## Customer accounts
+
+- Registration and sign-in live at `/account/register` and `/account/login`. Customers and admins are separate tables and cookies; a customer can never access `/admin`.
+- Registration creates a customer session immediately. The email is unverified until the link is opened. Verification also claims earlier guest orders with the same email.
+- Guest orders keep `Order.customerId` null. They become visible in an account only after email verification, a password reset via email, or a Google identity with a verified email. An email field alone is never enough.
+- Passwords use bcrypt cost 12. Policy: at least 10 characters, a letter, a number, at most 72 bytes, and a small denylist. Changing a password rotates every session.
+- Login, registration, forgot-password, reset-password and resend-verification are rate-limited in the database. Login errors are deliberately generic.
+- Account pages call `requireCustomer()`; order lookups include `customerId` in the Prisma query. Unauthenticated requests redirect to `/account/login?next=…`, and `next` only accepts internal `/account` paths.
+
+### Google sign-in setup
+
+1. In Google Cloud Console → **APIs & Services → Credentials**, create an **OAuth 2.0 Client ID** of type **Web application**.
+2. Add authorised redirect URIs exactly:
+   - `http://localhost:3000/api/auth/google/callback` (or the port you use)
+   - `https://<your-production-domain>/api/auth/google/callback`
+3. Set `GOOGLE_CLIENT_ID` and `GOOGLE_CLIENT_SECRET` in the environment. Redeploy or restart.
+4. Without both variables, the Google button renders disabled with a clear explanation. No login is simulated, and no account is auto-merged on an unverified email.
+5. Linking Google from `/account/security` requires an existing signed-in session. A password account must sign in with its password before Google can be linked.
+
+The callback uses an httpOnly, short-lived cookie for `state` and PKCE, rejects expired or mismatched state, and refuses provider identities whose email Google has not verified.
+
+### Transactional email
+
+Account email is optional. With `RESEND_API_KEY` and `EMAIL_FROM` set, verification and reset links are delivered through Resend's HTTPS API. Without them:
+
+- development logs the link to the server console;
+- production returns an honest "email delivery is not configured" message and does not claim a message was sent.
+
+No order confirmation email is sent in either case.
+
+---
+
 ## Admin access
 
 - Sign in at `/admin/login`.
@@ -273,8 +337,11 @@ Countries outside configured zones are rejected with a clear message. There is n
 ```bash
 npx tsc --noEmit
 npm run lint
+npm test
 npm run build
 ```
+
+`npm test` runs the Node test runner through `tsx`. It covers shared Zod schemas (registration, login, checkout, address, admin product/variant/tracking/stock/settings) and redirect safety. Database-backed flows and external providers are not covered by unit tests; see the manual checklist below.
 
 ### Browser end-to-end harnesses
 
@@ -308,7 +375,12 @@ Both scripts hard-code `http://localhost:3001` and `C:\Program Files\Google\Chro
 9. Adjust stock in Inventory; confirm the ledger and storefront availability update.
 10. Change a setting; confirm the storefront reflects it without a rebuild.
 11. Sign out and request `/admin`; confirm a redirect to login.
-12. Keyboard-only pass, 390px pass, and `prefers-reduced-motion: reduce` pass.
+12. Register a customer, confirm the verification banner, follow the console/dev email link, and confirm the email is verified.
+13. Place a guest order with the same email, then verify it; confirm the order appears in `/account/orders` only after verification.
+14. Try to open another customer's order URL while signed in; confirm a 404. Try all account routes while signed out; confirm a login redirect.
+15. Submit invalid registration, login, profile, address and checkout values; confirm field errors, focus on the first invalid field, and preserved values.
+16. With Google credentials configured, sign in and link/unlink Google; without them, confirm the button is disabled and explains why.
+17. Keyboard-only pass, 390px pass, and `prefers-reduced-motion: reduce` pass.
 
 ---
 
@@ -321,6 +393,7 @@ Both scripts hard-code `http://localhost:3001` and `C:\Program Files\Google\Chro
 3. Set the remaining variables under **Settings → Environment Variables**:
    - `NEXT_PUBLIC_SITE_URL` = `https://<your-production-domain>` (optional; the deployment domain is used as a fallback)
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD`, `ADMIN_NAME` (for the first seed only)
+   - optional: `RESEND_API_KEY`, `EMAIL_FROM`, `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`
 4. Redeploy. `npm run vercel-build` generates the client, applies `prisma/migrations/`, and builds.
 5. Seed once. Either run it locally against the production database:
 
@@ -415,6 +488,7 @@ These are intentionally shipped as placeholders and are labelled as such in the 
 - [ ] Production URL is HTTPS and `NEXT_PUBLIC_SITE_URL` matches it.
 - [ ] `/admin` redirects to login when signed out; a direct admin URL cannot be opened without a session.
 - [ ] A test admin server action (e.g. status update) succeeds when signed in and is rejected when signed out.
+- [ ] Security headers are present in production (`Content-Security-Policy`, `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, `Permissions-Policy`); no CSP violations appear in the browser console on shop, product, checkout, account, and admin pages.
 - [ ] Database backups are scheduled.
 - [ ] Error monitoring is configured (optional but recommended).
 

@@ -11,7 +11,13 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-type Search = { error?: string; next?: string; reason?: string; loggedout?: string };
+type Search = {
+  error?: string;
+  next?: string;
+  reason?: string;
+  loggedout?: string;
+  retry?: string;
+};
 
 export default async function AdminLoginPage({
   searchParams,
@@ -27,11 +33,16 @@ export default async function AdminLoginPage({
       ? "That email and password do not match an admin account."
       : params.error === "missing"
         ? "Enter both your email and password."
-        : params.reason === "session"
-          ? "Your session expired. Sign in again to continue."
-          : params.loggedout
-            ? "You have been signed out."
-            : "";
+        : params.error === "limited"
+          ? `Too many sign-in attempts. Try again in ${Math.max(
+              1,
+              Math.ceil(Number(params.retry ?? 60) / 60),
+            )} minute${Math.max(1, Math.ceil(Number(params.retry ?? 60) / 60)) === 1 ? "" : "s"}.`
+          : params.reason === "session"
+            ? "Your session expired. Sign in again to continue."
+            : params.loggedout
+              ? "You have been signed out."
+              : "";
 
   const next = params.next ?? "/admin";
 

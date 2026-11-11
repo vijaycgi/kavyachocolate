@@ -7,6 +7,12 @@ import { ArrowRight, Check, Loader2, LockKeyhole } from "lucide-react";
 import { useCart } from "@/components/cart/cart-provider";
 import { formatMoney } from "@/lib/money";
 import type { FulfillmentMethod } from "@/lib/fulfillment";
+import {
+  checkoutSchema,
+  fieldErrorsFromZod,
+  firstFieldError,
+  type FieldErrors,
+} from "@/lib/validation";
 
 type CountryOption = { code: string; name: string };
 type PickupOption = {
@@ -20,6 +26,17 @@ type PickupOption = {
   phone: string | null;
 };
 
+type SavedAddress = {
+  name: string;
+  phone: string;
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+  country: string;
+};
+
 type Quote = {
   subtotalMinor: number;
   shippingMinor: number;
@@ -31,6 +48,30 @@ type Quote = {
 };
 
 const CHECKOUT_KEY = "kavya-checkout-key";
+
+function ErrorLine({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p id={`${id}-error`} className="error-text">
+      {message}
+    </p>
+  );
+}
+
+const fieldIds: Record<string, string> = {
+  name: "name",
+  email: "email",
+  phone: "phone",
+  notes: "notes",
+  pickupLocationId: "pickup",
+  "address.line1": "line1",
+  "address.line2": "line2",
+  "address.city": "city",
+  "address.state": "state",
+  "address.postalCode": "postalCode",
+  "address.country": "country",
+  items: "checkout-form",
+};
 
 const methods: { value: FulfillmentMethod; title: string; copy: string }[] = [
   {
@@ -55,33 +96,38 @@ export function CheckoutForm({
   pickups,
   pickupNote,
   taxLabel,
+  account,
+  savedAddress,
 }: {
   countries: CountryOption[];
   pickups: PickupOption[];
   pickupNote: string;
   taxLabel: string;
+  account?: { name: string; email: string; phone: string } | null;
+  savedAddress?: SavedAddress | null;
 }) {
   const router = useRouter();
   const { lines, hydrated, subtotalMinor, clear } = useCart();
   const keyRef = useRef("");
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    phone: "",
+  const [form, setForm] = useState(() => ({
+    name: account?.name || savedAddress?.name || "",
+    email: account?.email ?? "",
+    phone: account?.phone || savedAddress?.phone || "",
     notes: "",
     method: "SHIP" as FulfillmentMethod,
-    country: countries[0]?.code ?? "IN",
-    line1: "",
-    line2: "",
-    city: "",
-    state: "",
-    postalCode: "",
+    country: savedAddress?.country || countries[0]?.code || "IN",
+    line1: savedAddress?.line1 ?? "",
+    line2: savedAddress?.line2 ?? "",
+    city: savedAddress?.city ?? "",
+    state: savedAddress?.state ?? "",
+    postalCode: savedAddress?.postalCode ?? "",
     pickupLocationId: pickups[0]?.id ?? "",
-  });
+  }));
   const [quote, setQuote] = useState<Quote | null>(null);
   const [quoteLoading, setQuoteLoading] = useState(false);
   const [quoteError, setQuoteError] = useState<{ key: string; message: string } | null>(null);
   const [error, setError] = useState("");
+  const [fieldErrors, setFieldErrors] = useState<FieldErrors>({});
   const [submitting, setSubmitting] = useState(false);
 
   const itemsKey = lines.map((line) => `${line.variantId}:${line.quantity}`).join("|");
@@ -180,50 +226,89 @@ export function CheckoutForm({
 
   function update<K extends keyof typeof form>(key: K, value: (typeof form)[K]) {
     setForm((current) => ({ ...current, [key]: value }));
+    setFieldErrors((current) => {
+      const mapped = key === "pickupLocationId" ? "pickupLocationId" : key;
+      const addressKey = `address.${key}`;
+      if (!current[mapped] && !current[addressKey]) return current;
+      const next = { ...current };
+      delete next[mapped];
+      delete next[addressKey];
+      return next;
+    });
+  }
+
+  function focusFirstField(errors: FieldErrors) {
+    const first = Object.keys(errors)[0];
+    const id = fieldIds[first];
+    if (!id) return;
+    const element = document.getElementById(id);
+    element?.scrollIntoView({ block: "center", behavior: "smooth" });
+    (element as HTMLElement | null)?.focus({ preventScroll: true });
+  }
+
+  function buildPayload() {
+    return {
+      idempotencyKey:
+        keyRef.current || `kc-${Date.now()}-${Math.random().toString(36).slice(2)}`,
+      name: form.name,
+      email: form.email,
+      phone: form.phone,
+      method: form.method,
+      notes: form.notes,
+      pickupLocationId: form.method === "PICKUP" ? form.pickupLocationId : undefined,
+      address:
+        form.method === "PICKUP"
+          ? undefined
+          : {
+              line1: form.line1,
+              line2: form.line2,
+              city: form.city,
+              state: form.state,
+              postalCode: form.postalCode,
+              country: form.country,
+            },
+      items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
+    };
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (submitting) return;
     setError("");
+
+    const payload = buildPayload();
+    const parsed = checkoutSchema.safeParse(payload);
+    if (!parsed.success) {
+      const errors = fieldErrorsFromZod(parsed.error);
+      setFieldErrors(errors);
+      setError(firstFieldError(errors));
+      focusFirstField(errors);
+      return;
+    }
 
     if (!activeQuote) {
       setError("Add a delivery address or choose pickup before placing the order.");
       return;
     }
 
-    if (!keyRef.current) {
-      keyRef.current = `kc-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-    }
-
+    keyRef.current = payload.idempotencyKey;
+    setFieldErrors({});
     setSubmitting(true);
     try {
       const response = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          idempotencyKey: keyRef.current,
-          name: form.name,
-          email: form.email,
-          phone: form.phone,
-          method: form.method,
-          notes: form.notes,
-          pickupLocationId: form.method === "PICKUP" ? form.pickupLocationId : undefined,
-          address:
-            form.method === "PICKUP"
-              ? undefined
-              : {
-                  line1: form.line1,
-                  line2: form.line2,
-                  city: form.city,
-                  state: form.state,
-                  postalCode: form.postalCode,
-                  country: form.country,
-                },
-          items: lines.map((line) => ({ variantId: line.variantId, quantity: line.quantity })),
-        }),
+        body: JSON.stringify(payload),
       });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.error ?? "We could not place the order.");
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        const serverErrors = (data.fieldErrors ?? {}) as FieldErrors;
+        setFieldErrors(serverErrors);
+        setError(data.error ?? "We could not place the order. Check the details and try again.");
+        if (Object.keys(serverErrors).length > 0) focusFirstField(serverErrors);
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
 
       clear();
       try {
@@ -235,11 +320,36 @@ export function CheckoutForm({
         `/order-success?order=${encodeURIComponent(data.orderNumber)}&key=${encodeURIComponent(data.accessKey)}`,
       );
     } catch (submitError) {
-      setError((submitError as Error).message);
+      if (submitError instanceof TypeError) {
+        setError("We could not reach the server. Check your connection and try again.");
+      } else {
+        setError((submitError as Error).message || "We could not place the order. Try again.");
+      }
       window.scrollTo({ top: 0, behavior: "smooth" });
     } finally {
       setSubmitting(false);
     }
+  }
+
+  function fieldError(key: string) {
+    return fieldErrors[key];
+  }
+
+  function fieldA11y(id: string, key: string, hintId?: string) {
+    const describedBy = [
+      fieldErrors[key] ? `${id}-error` : null,
+      hintId ?? null,
+    ]
+      .filter(Boolean)
+      .join(" ");
+    return {
+      "aria-invalid": fieldErrors[key] ? true : undefined,
+      "aria-describedby": describedBy || undefined,
+    } as const;
+  }
+
+  function fieldClass(key: string) {
+    return fieldErrors[key] ? "field border-[#9b1c2c]" : "field";
   }
 
   if (!hydrated) {
@@ -290,10 +400,13 @@ export function CheckoutForm({
                 autoComplete="name"
                 required
                 minLength={2}
-                className="field"
+                maxLength={90}
+                className={fieldClass("name")}
+                {...fieldA11y("name", "name")}
                 value={form.name}
                 onChange={(event) => update("name", event.target.value)}
               />
+              <ErrorLine id="name" message={fieldError("name")} />
             </div>
             <div>
               <label htmlFor="email" className="label">Email</label>
@@ -304,11 +417,19 @@ export function CheckoutForm({
                 inputMode="email"
                 autoComplete="email"
                 required
-                className="field"
+                readOnly={Boolean(account)}
+                aria-readonly={account ? true : undefined}
+                className={`${fieldClass("email")} ${account ? "bg-paper-2/60" : ""}`}
+                {...fieldA11y("email", "email", "email-hint")}
                 value={form.email}
                 onChange={(event) => update("email", event.target.value)}
               />
-              <p className="hint">Used for the order confirmation and tracking.</p>
+              <ErrorLine id="email" message={fieldError("email")} />
+              <p id="email-hint" className="hint">
+                {account
+                  ? "Locked to your account email. This is how the order appears in your history."
+                  : "Used for the order confirmation and tracking."}
+              </p>
             </div>
             <div>
               <label htmlFor="phone" className="label">Phone</label>
@@ -319,11 +440,13 @@ export function CheckoutForm({
                 inputMode="tel"
                 autoComplete="tel"
                 required
-                className="field"
+                className={fieldClass("phone")}
+                {...fieldA11y("phone", "phone", "phone-hint")}
                 value={form.phone}
                 onChange={(event) => update("phone", event.target.value)}
               />
-              <p className="hint">For delivery questions or pickup timing.</p>
+              <ErrorLine id="phone" message={fieldError("phone")} />
+              <p id="phone-hint" className="hint">For delivery questions or pickup timing.</p>
             </div>
           </div>
         </section>
@@ -386,7 +509,9 @@ export function CheckoutForm({
                 <select
                   id="pickup"
                   name="pickup"
-                  className="field"
+                  required
+                  className={fieldClass("pickupLocationId")}
+                  {...fieldA11y("pickup", "pickupLocationId")}
                   value={form.pickupLocationId}
                   onChange={(event) => update("pickupLocationId", event.target.value)}
                 >
@@ -396,6 +521,7 @@ export function CheckoutForm({
                     </option>
                   ))}
                 </select>
+                <ErrorLine id="pickup" message={fieldError("pickupLocationId")} />
               </div>
 
               {selectedPickup ? (
@@ -419,7 +545,9 @@ export function CheckoutForm({
                   id="country"
                   name="country"
                   autoComplete="country"
-                  className="field"
+                  required
+                  className={fieldClass("address.country")}
+                  {...fieldA11y("country", "address.country")}
                   value={form.country}
                   onChange={(event) => update("country", event.target.value)}
                 >
@@ -429,6 +557,7 @@ export function CheckoutForm({
                     </option>
                   ))}
                 </select>
+                <ErrorLine id="country" message={fieldError("address.country")} />
               </div>
               <div>
                 <label htmlFor="postalCode" className="label">Postal code</label>
@@ -437,10 +566,13 @@ export function CheckoutForm({
                   name="postalCode"
                   autoComplete="postal-code"
                   required
-                  className="field"
+                  maxLength={16}
+                  className={fieldClass("address.postalCode")}
+                  {...fieldA11y("postalCode", "address.postalCode")}
                   value={form.postalCode}
                   onChange={(event) => update("postalCode", event.target.value)}
                 />
+                <ErrorLine id="postalCode" message={fieldError("address.postalCode")} />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="line1" className="label">Address line 1</label>
@@ -449,10 +581,14 @@ export function CheckoutForm({
                   name="line1"
                   autoComplete="address-line1"
                   required
-                  className="field"
+                  minLength={3}
+                  maxLength={140}
+                  className={fieldClass("address.line1")}
+                  {...fieldA11y("line1", "address.line1")}
                   value={form.line1}
                   onChange={(event) => update("line1", event.target.value)}
                 />
+                <ErrorLine id="line1" message={fieldError("address.line1")} />
               </div>
               <div className="sm:col-span-2">
                 <label htmlFor="line2" className="label">Address line 2 <span className="normal-case tracking-normal text-ink-2">(optional)</span></label>
@@ -460,10 +596,13 @@ export function CheckoutForm({
                   id="line2"
                   name="line2"
                   autoComplete="address-line2"
-                  className="field"
+                  maxLength={140}
+                  className={fieldClass("address.line2")}
+                  {...fieldA11y("line2", "address.line2")}
                   value={form.line2}
                   onChange={(event) => update("line2", event.target.value)}
                 />
+                <ErrorLine id="line2" message={fieldError("address.line2")} />
               </div>
               <div>
                 <label htmlFor="city" className="label">City</label>
@@ -472,10 +611,14 @@ export function CheckoutForm({
                   name="city"
                   autoComplete="address-level2"
                   required
-                  className="field"
+                  minLength={2}
+                  maxLength={80}
+                  className={fieldClass("address.city")}
+                  {...fieldA11y("city", "address.city")}
                   value={form.city}
                   onChange={(event) => update("city", event.target.value)}
                 />
+                <ErrorLine id="city" message={fieldError("address.city")} />
               </div>
               <div>
                 <label htmlFor="state" className="label">State / region <span className="normal-case tracking-normal text-ink-2">(optional)</span></label>
@@ -483,10 +626,13 @@ export function CheckoutForm({
                   id="state"
                   name="state"
                   autoComplete="address-level1"
-                  className="field"
+                  maxLength={80}
+                  className={fieldClass("address.state")}
+                  {...fieldA11y("state", "address.state")}
                   value={form.state}
                   onChange={(event) => update("state", event.target.value)}
                 />
+                <ErrorLine id="state" message={fieldError("address.state")} />
               </div>
 
               <div className="sm:col-span-2" aria-live="polite">
@@ -533,12 +679,14 @@ export function CheckoutForm({
               id="notes"
               name="notes"
               maxLength={500}
-              className="field"
+              className={fieldClass("notes")}
+              {...fieldA11y("notes", "notes", "notes-hint")}
               placeholder="A gift note, a delivery instruction, or a question about the bars."
               value={form.notes}
               onChange={(event) => update("notes", event.target.value)}
             />
-            <p className="hint">Do not include card or payment details. We do not collect them.</p>
+            <ErrorLine id="notes" message={fieldError("notes")} />
+            <p id="notes-hint" className="hint">Do not include card or payment details. We do not collect them.</p>
           </div>
         </section>
 
@@ -554,7 +702,7 @@ export function CheckoutForm({
         </div>
 
         <div className="lg:hidden">
-          <button type="submit" className="btn btn-primary w-full" disabled={!activeQuote || submitting}>
+          <button type="submit" className="btn btn-primary w-full" disabled={submitting}>
             {submitting ? (
               <>
                 <Loader2 size={15} className="animate-spin" aria-hidden /> Placing order…
@@ -623,7 +771,7 @@ export function CheckoutForm({
           type="submit"
           form="checkout-form"
           className="btn btn-primary mt-5 w-full"
-          disabled={!activeQuote || submitting}
+          disabled={submitting}
         >
           {submitting ? (
             <>

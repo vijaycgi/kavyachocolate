@@ -105,14 +105,68 @@ model InventoryMovement {
 }
 
 model Customer {
-  id        String    @id @default(cuid())
-  email     String    @unique
-  name      String
-  phone     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  orders    Order[]
-  addresses Address[]
+  id              String            @id @default(cuid())
+  email           String            @unique
+  name            String
+  phone           String?
+  passwordHash    String?
+  emailVerifiedAt DateTime?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  orders          Order[]
+  addresses       Address[]
+  sessions        CustomerSession[]
+  tokens          CustomerToken[]
+  oauthAccounts   OAuthAccount[]
+}
+
+model CustomerSession {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  expiresAt  DateTime
+  createdAt  DateTime @default(now())
+  lastUsedAt DateTime @default(now())
+
+  @@index([customerId])
+  @@index([expiresAt])
+}
+
+model CustomerToken {
+  id         String   @id @default(cuid())
+  tokenHash  String   @unique
+  customerId String
+  customer   Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  type       String
+  expiresAt  DateTime
+  usedAt     DateTime?
+  createdAt  DateTime @default(now())
+
+  @@index([customerId, type])
+  @@index([expiresAt])
+}
+
+model OAuthAccount {
+  id                String   @id @default(cuid())
+  provider          String
+  providerAccountId String
+  customerId        String
+  customer          Customer @relation(fields: [customerId], references: [id], onDelete: Cascade)
+  createdAt         DateTime @default(now())
+
+  @@unique([provider, providerAccountId])
+  @@unique([provider, customerId])
+  @@index([customerId])
+}
+
+model AuthRateLimit {
+  key       String   @id
+  attempts  Int      @default(0)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([expiresAt])
 }
 
 model Address {
@@ -122,6 +176,8 @@ model Address {
   orderId    String?   @unique
   order      Order?    @relation(fields: [orderId], references: [id], onDelete: Cascade)
   kind       String    @default("SHIPPING")
+  label      String?
+  isDefault  Boolean   @default(false)
   name       String
   phone      String?
   line1      String

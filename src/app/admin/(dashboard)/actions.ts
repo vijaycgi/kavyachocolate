@@ -7,7 +7,21 @@ import { prisma } from "@/lib/db";
 import { createSession, requireAdmin } from "@/lib/auth";
 import { rupeesToMinor } from "@/lib/money";
 import { addOrderNote, OrderError, updateOrderStatus, updateOrderTracking } from "@/lib/orders";
-import { isOrderStatus } from "@/lib/validation";
+import {
+  adminAreaSchema,
+  adminOrderStatusSchema,
+  adminPickupSchema,
+  adminProductSchema,
+  adminSettingsSchema,
+  adminStockSchema,
+  adminTrackingSchema,
+  adminVariantSchema,
+  adminZoneSchema,
+  fieldErrorsFromZod,
+  firstFieldError,
+  isOrderStatus,
+  passwordIssue,
+} from "@/lib/validation";
 
 function text(formData: FormData, key: string) {
   return String(formData.get(key) ?? "").trim();
@@ -51,10 +65,14 @@ function uniqueMessage(error: unknown) {
 
 export async function updateOrderStatusAction(formData: FormData) {
   const admin = await requireAdmin();
-  const orderId = text(formData, "orderId");
-  const status = text(formData, "status");
+  const parsed = adminOrderStatusSchema.safeParse({
+    orderId: text(formData, "orderId"),
+    status: text(formData, "status"),
+  });
+  if (!parsed.success) fail("/admin/orders", firstFieldError(fieldErrorsFromZod(parsed.error)));
 
-  if (!orderId || !isOrderStatus(status)) fail(`/admin/orders/${orderId}`, "Choose a valid status.");
+  const { orderId, status } = parsed.data;
+  if (!isOrderStatus(status)) fail(`/admin/orders/${orderId}`, "Choose a valid status.");
 
   try {
     await updateOrderStatus(orderId, status, admin.email);
@@ -74,16 +92,29 @@ export async function updateOrderStatusAction(formData: FormData) {
 
 export async function saveTrackingAction(formData: FormData) {
   const admin = await requireAdmin();
-  const orderId = text(formData, "orderId");
-  if (!orderId) fail("/admin/orders", "Order not found.");
+  const parsed = adminTrackingSchema.safeParse({
+    orderId: text(formData, "orderId"),
+    courier: text(formData, "courier"),
+    trackingNumber: text(formData, "trackingNumber"),
+    trackingUrl: text(formData, "trackingUrl"),
+  });
+  if (!parsed.success) {
+    const orderId = text(formData, "orderId");
+    fail(
+      orderId ? `/admin/orders/${orderId}` : "/admin/orders",
+      firstFieldError(fieldErrorsFromZod(parsed.error)),
+    );
+  }
+
+  const { orderId, courier, trackingNumber, trackingUrl } = parsed.data;
 
   try {
     await updateOrderTracking(
       orderId,
       {
-        courier: text(formData, "courier"),
-        trackingNumber: text(formData, "trackingNumber"),
-        trackingUrl: text(formData, "trackingUrl"),
+        courier: courier ?? "",
+        trackingNumber: trackingNumber ?? "",
+        trackingUrl: trackingUrl ?? "",
       },
       admin.email,
     );
@@ -99,9 +130,11 @@ export async function addOrderNoteAction(formData: FormData) {
   const admin = await requireAdmin();
   const orderId = text(formData, "orderId");
   const message = text(formData, "message");
-  if (!orderId || !message) fail(`/admin/orders/${orderId}`, "Write a note first.");
+  if (!orderId) fail("/admin/orders", "Order not found.");
+  if (!message) fail(`/admin/orders/${orderId}`, "Write a note first.");
+  if (message.length > 500) fail(`/admin/orders/${orderId}`, "Keep the note under 500 characters.");
 
-  await addOrderNote(orderId, message.slice(0, 500), admin.email);
+  await addOrderNote(orderId, message, admin.email);
   revalidatePath(`/admin/orders/${orderId}`);
   redirect(`/admin/orders/${orderId}?saved=note`);
 }
@@ -109,27 +142,48 @@ export async function addOrderNoteAction(formData: FormData) {
 export async function saveProductAction(formData: FormData) {
   await requireAdmin();
   const id = text(formData, "id");
-  const name = text(formData, "name");
-  if (!name) fail(id ? `/admin/products/${id}` : "/admin/products/new", "Give the bar a name.");
+  const failPath = id ? `/admin/products/${id}` : "/admin/products/new";
 
-  const slug = slugify(text(formData, "slug") || name);
-  if (!slug) fail(id ? `/admin/products/${id}` : "/admin/products/new", "Add a URL slug.");
-
-  const data = {
-    name,
-    slug,
+  const parsed = adminProductSchema.safeParse({
+    id,
+    name: text(formData, "name"),
+    slug: text(formData, "slug"),
     collection: text(formData, "collection") || "CLASSIC",
     tagline: text(formData, "tagline"),
     description: text(formData, "description"),
     story: text(formData, "story"),
     ingredients: text(formData, "ingredients"),
     allergens: text(formData, "allergens"),
-    cocoaPercent: optionalInteger(formData, "cocoaPercent"),
-    imageUrl: text(formData, "imageUrl") || "/images/products/classic.jpg",
-    hoverImageUrl: text(formData, "hoverImageUrl") || null,
+    cocoaPercent: optionalInteger(formData, "cocoaPercent") ?? undefined,
+    imageUrl: text(formData, "imageUrl"),
+    hoverImageUrl: text(formData, "hoverImageUrl"),
+    position: integer(formData, "position", 0),
     featured: bool(formData, "featured"),
     published: bool(formData, "published"),
-    position: integer(formData, "position", 0),
+  });
+  if (!parsed.success) {
+    fail(failPath, firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
+
+  const parsedProduct = parsed.data;
+  const slug = slugify(parsedProduct.slug || parsedProduct.name);
+  if (!slug) fail(failPath, "Add a URL slug.");
+
+  const data = {
+    name: parsedProduct.name,
+    slug,
+    collection: parsedProduct.collection,
+    tagline: parsedProduct.tagline ?? "",
+    description: parsedProduct.description ?? "",
+    story: parsedProduct.story ?? "",
+    ingredients: parsedProduct.ingredients ?? "",
+    allergens: parsedProduct.allergens ?? "",
+    cocoaPercent: parsedProduct.cocoaPercent ?? null,
+    imageUrl: parsedProduct.imageUrl || "/images/products/classic.jpg",
+    hoverImageUrl: parsedProduct.hoverImageUrl || null,
+    featured: Boolean(parsedProduct.featured),
+    published: Boolean(parsedProduct.published),
+    position: parsedProduct.position ?? 0,
   };
 
   let productId = id;
@@ -142,10 +196,7 @@ export async function saveProductAction(formData: FormData) {
       productId = created.id;
     }
   } catch (error) {
-    fail(
-      id ? `/admin/products/${id}` : "/admin/products/new",
-      uniqueMessage(error),
-    );
+    fail(failPath, uniqueMessage(error));
   }
 
   revalidatePath("/admin/products");
@@ -198,26 +249,38 @@ export async function saveVariantAction(formData: FormData) {
   const productId = text(formData, "productId");
   const variantId = text(formData, "variantId");
   if (!productId) fail("/admin/products", "Product not found.");
+  const failPath = `/admin/products/${productId}`;
 
-  const name = text(formData, "name");
-  const sku = text(formData, "sku").toUpperCase();
-  if (!name || !sku) fail(`/admin/products/${productId}`, "A variant needs a name and SKU.");
-
-  const priceMinor = rupeesToMinor(text(formData, "price"));
-  if (priceMinor <= 0) fail(`/admin/products/${productId}`, "Enter a price above zero.");
-
-  const compareAt = text(formData, "compareAt");
-
-  const data = {
-    name,
-    sku,
-    weightGrams: Math.max(1, integer(formData, "weightGrams", 70)),
-    priceMinor,
-    compareAtMinor: compareAt ? rupeesToMinor(compareAt) : null,
-    lowStockThreshold: Math.max(0, integer(formData, "lowStockThreshold", 6)),
+  const compareAtRaw = text(formData, "compareAt");
+  const parsed = adminVariantSchema.safeParse({
+    productId,
+    variantId,
+    name: text(formData, "name"),
+    sku: text(formData, "sku").toUpperCase(),
+    weightGrams: integer(formData, "weightGrams", 70),
+    price: text(formData, "price"),
+    compareAt: compareAtRaw ? compareAtRaw : undefined,
+    lowStockThreshold: integer(formData, "lowStockThreshold", 6),
+    stock: text(formData, "stock") ? integer(formData, "stock", 0) : undefined,
     active: bool(formData, "active"),
     shippingEligible: bool(formData, "shippingEligible"),
     internationalEligible: bool(formData, "internationalEligible"),
+  });
+  if (!parsed.success) {
+    fail(failPath, firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
+
+  const input = parsed.data;
+  const data = {
+    name: input.name,
+    sku: input.sku,
+    weightGrams: input.weightGrams,
+    priceMinor: rupeesToMinor(input.price),
+    compareAtMinor: input.compareAt ? rupeesToMinor(input.compareAt) : null,
+    lowStockThreshold: input.lowStockThreshold,
+    active: Boolean(input.active),
+    shippingEligible: Boolean(input.shippingEligible),
+    internationalEligible: Boolean(input.internationalEligible),
     productId,
   };
 
@@ -225,7 +288,7 @@ export async function saveVariantAction(formData: FormData) {
     if (variantId) {
       await prisma.variant.update({ where: { id: variantId }, data });
     } else {
-      const initialStock = Math.max(0, integer(formData, "stock", 0));
+      const initialStock = Math.max(0, input.stock ?? 0);
       const variant = await prisma.variant.create({ data: { ...data, stock: initialStock } });
       if (initialStock > 0) {
         await prisma.inventoryMovement.create({
@@ -241,7 +304,7 @@ export async function saveVariantAction(formData: FormData) {
       }
     }
   } catch (error) {
-    fail(`/admin/products/${productId}`, uniqueMessage(error));
+    fail(failPath, uniqueMessage(error));
   }
 
   revalidatePath(`/admin/products/${productId}`);
@@ -269,14 +332,17 @@ export async function deactivateVariantAction(formData: FormData) {
 
 export async function adjustStockAction(formData: FormData) {
   const admin = await requireAdmin();
-  const variantId = text(formData, "variantId");
-  const delta = integer(formData, "delta", 0);
-  const reason = text(formData, "reason") || "CORRECTION";
-  const note = text(formData, "note");
-  if (!variantId || delta === 0) fail("/admin/inventory", "Enter a non-zero adjustment.");
+  const parsed = adminStockSchema.safeParse({
+    variantId: text(formData, "variantId"),
+    delta: text(formData, "delta"),
+    reason: text(formData, "reason") || "CORRECTION",
+    note: text(formData, "note"),
+  });
+  if (!parsed.success) {
+    fail("/admin/inventory", firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
 
-  const allowed = ["RESTOCK", "CORRECTION", "SAMPLE", "DAMAGE", "RETURN", "OTHER"];
-  if (!allowed.includes(reason)) fail("/admin/inventory", "Choose a valid reason.");
+  const { variantId, delta, reason, note } = parsed.data;
 
   try {
     await prisma.$transaction(async (tx) => {
@@ -314,23 +380,36 @@ export async function adjustStockAction(formData: FormData) {
 export async function saveZoneAction(formData: FormData) {
   await requireAdmin();
   const id = text(formData, "id");
-  const name = text(formData, "name");
-  if (!name) fail("/admin/shipping", "Give the zone a name.");
+  const parsed = adminZoneSchema.safeParse({
+    id,
+    name: text(formData, "name"),
+    countries: text(formData, "countries"),
+    fee: text(formData, "fee") || "0",
+    freeOver: text(formData, "freeOver") || "0",
+    minDays: optionalInteger(formData, "minDays") ?? undefined,
+    maxDays: optionalInteger(formData, "maxDays") ?? undefined,
+    active: bool(formData, "active"),
+    position: integer(formData, "position", 0),
+  });
+  if (!parsed.success) {
+    fail("/admin/shipping", firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
 
-  const countries = text(formData, "countries")
+  const zone = parsed.data;
+  const countries = zone.countries
     .split(",")
     .map((code) => code.trim().toUpperCase())
     .filter(Boolean);
 
   const data = {
-    name,
+    name: zone.name,
     countries: JSON.stringify(countries),
-    feeMinor: rupeesToMinor(text(formData, "fee")),
-    freeOverMinor: rupeesToMinor(text(formData, "freeOver")),
-    minDays: optionalInteger(formData, "minDays"),
-    maxDays: optionalInteger(formData, "maxDays"),
-    active: bool(formData, "active"),
-    position: integer(formData, "position", 0),
+    feeMinor: rupeesToMinor(zone.fee),
+    freeOverMinor: rupeesToMinor(zone.freeOver),
+    minDays: zone.minDays ?? null,
+    maxDays: zone.maxDays ?? null,
+    active: zone.active,
+    position: zone.position,
   };
 
   try {
@@ -349,19 +428,33 @@ export async function saveZoneAction(formData: FormData) {
 export async function savePickupAction(formData: FormData) {
   await requireAdmin();
   const id = text(formData, "id");
-  const name = text(formData, "name");
-  if (!name) fail("/admin/shipping", "Give the pickup location a name.");
-
-  const data = {
-    name,
+  const parsed = adminPickupSchema.safeParse({
+    id,
+    name: text(formData, "name"),
     addressLine: text(formData, "addressLine"),
     city: text(formData, "city"),
     postalCode: text(formData, "postalCode"),
-    phone: text(formData, "phone") || null,
+    phone: text(formData, "phone"),
     instructions: text(formData, "instructions"),
     hours: text(formData, "hours"),
     active: bool(formData, "active"),
     position: integer(formData, "position", 0),
+  });
+  if (!parsed.success) {
+    fail("/admin/shipping", firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
+
+  const pickup = parsed.data;
+  const data = {
+    name: pickup.name,
+    addressLine: pickup.addressLine,
+    city: pickup.city,
+    postalCode: pickup.postalCode,
+    phone: pickup.phone || null,
+    instructions: pickup.instructions ?? "",
+    hours: pickup.hours ?? "",
+    active: pickup.active,
+    position: pickup.position,
   };
 
   try {
@@ -380,22 +473,34 @@ export async function savePickupAction(formData: FormData) {
 export async function saveAreaAction(formData: FormData) {
   await requireAdmin();
   const id = text(formData, "id");
-  const name = text(formData, "name");
-  if (!name) fail("/admin/shipping", "Give the delivery area a name.");
+  const parsed = adminAreaSchema.safeParse({
+    id,
+    name: text(formData, "name"),
+    postalCodes: text(formData, "postalCodes"),
+    fee: text(formData, "fee") || "0",
+    minOrder: text(formData, "minOrder") || "0",
+    schedule: text(formData, "schedule"),
+    active: bool(formData, "active"),
+    position: integer(formData, "position", 0),
+  });
+  if (!parsed.success) {
+    fail("/admin/shipping", firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
 
-  const postalCodes = text(formData, "postalCodes")
+  const area = parsed.data;
+  const postalCodes = area.postalCodes
     .split(",")
     .map((code) => code.trim().toUpperCase())
     .filter(Boolean);
 
   const data = {
-    name,
+    name: area.name,
     postalCodes: JSON.stringify(postalCodes),
-    feeMinor: rupeesToMinor(text(formData, "fee")),
-    minOrderMinor: rupeesToMinor(text(formData, "minOrder")),
-    schedule: text(formData, "schedule"),
-    active: bool(formData, "active"),
-    position: integer(formData, "position", 0),
+    feeMinor: rupeesToMinor(area.fee),
+    minOrderMinor: rupeesToMinor(area.minOrder),
+    schedule: area.schedule ?? "",
+    active: area.active,
+    position: area.position,
   };
 
   try {
@@ -430,16 +535,28 @@ const settingKeys = [
 export async function saveSettingsAction(formData: FormData) {
   await requireAdmin();
 
+  const raw: Record<string, string> = {};
+  for (const key of settingKeys) {
+    raw[key] = text(formData, key);
+  }
+  raw["store.freeShippingOver"] = text(formData, "store.freeShippingOver") || "0";
+  raw["store.taxPercent"] = text(formData, "store.taxPercent") || "0";
+
+  const parsed = adminSettingsSchema.safeParse(raw);
+  if (!parsed.success) {
+    fail("/admin/settings", firstFieldError(fieldErrorsFromZod(parsed.error)));
+  }
+
+  const settings = parsed.data;
   const updates: Record<string, string> = {};
   for (const key of settingKeys) {
-    updates[key] = text(formData, key);
+    if (key === "store.lowStockThreshold") continue;
+    updates[key] = String(settings[key as keyof typeof settings] ?? "");
   }
-  updates["store.freeShippingOver"] = String(
-    rupeesToMinor(text(formData, "store.freeShippingOver")),
-  );
-  const taxPercent = Number.parseFloat(text(formData, "store.taxPercent") || "0");
+  updates["store.lowStockThreshold"] = String(settings["store.lowStockThreshold"]);
+  updates["store.freeShippingOver"] = String(rupeesToMinor(settings["store.freeShippingOver"]));
   updates["store.taxRateBp"] = String(
-    Number.isFinite(taxPercent) ? Math.max(0, Math.round(taxPercent * 100)) : 0,
+    Math.max(0, Math.round(settings["store.taxPercent"] * 100)),
   );
 
   for (const [key, value] of Object.entries(updates)) {
@@ -460,12 +577,12 @@ export async function changePasswordAction(formData: FormData) {
   const next = text(formData, "newPassword");
   const confirm = text(formData, "confirmPassword");
 
+  if (!current) fail("/admin/settings", "Enter your current password.");
   if (!(await bcrypt.compare(current, admin.passwordHash))) {
     fail("/admin/settings", "The current password is not correct.");
   }
-  if (next.length < 10) {
-    fail("/admin/settings", "Use at least 10 characters for the new password.");
-  }
+  const passwordProblem = passwordIssue(next);
+  if (passwordProblem) fail("/admin/settings", passwordProblem);
   if (next !== confirm) {
     fail("/admin/settings", "The new passwords do not match.");
   }
