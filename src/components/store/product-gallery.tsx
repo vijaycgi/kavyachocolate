@@ -14,6 +14,7 @@ export function ProductGallery({
 }) {
   const [active, setActive] = useState(0);
   const current = images[active] ?? images[0];
+  const placeholder = current ? !current.url.startsWith("/api/media/") : false;
 
   return (
     <div>
@@ -30,9 +31,11 @@ export function ProductGallery({
             className="animate-fade object-cover"
           />
         ) : null}
-        <span className="absolute left-4 top-4 bg-paper/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-2">
-          Placeholder photograph
-        </span>
+        {placeholder ? (
+          <span className="absolute left-4 top-4 bg-paper/90 px-2.5 py-1 text-[9px] font-semibold uppercase tracking-[0.16em] text-ink-2">
+            Placeholder photograph
+          </span>
+        ) : null}
       </div>
 
       {images.length > 1 ? (

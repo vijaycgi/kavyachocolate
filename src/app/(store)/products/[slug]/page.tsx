@@ -6,6 +6,7 @@ import { ProductCard } from "@/components/store/product-card";
 import { ProductGallery } from "@/components/store/product-gallery";
 import { ProductPurchase } from "@/components/store/product-purchase";
 import { collectionLabel, getProductBySlug, getRelatedProducts } from "@/lib/catalog";
+import { buildProductGalleryImages } from "@/lib/gallery";
 import { getSettings } from "@/lib/settings";
 import { siteUrl } from "@/lib/site";
 
@@ -38,10 +39,10 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
   if (!product) notFound();
 
   const related = await getRelatedProducts(product.slug);
-  const images =
-    product.images.length > 0
-      ? product.images.map((image) => ({ id: image.id, url: image.url, alt: image.alt }))
-      : [{ id: product.id, url: product.imageUrl, alt: `${product.name} — placeholder photograph` }];
+  const images = buildProductGalleryImages(
+    { id: product.id, url: product.imageUrl, name: product.name },
+    product.images.map((image) => ({ id: image.id, url: image.url, alt: image.alt })),
+  );
 
   const inStock = product.variants.some((variant) => variant.stock > 0);
 
@@ -50,7 +51,7 @@ export default async function ProductPage({ params }: { params: Promise<Params> 
     "@type": "Product",
     name: product.name,
     description: product.description,
-    image: [`${siteUrl}${product.imageUrl}`],
+    image: images.map((image) => `${siteUrl}${image.url}`),
     sku: product.variants[0]?.sku,
     brand: { "@type": "Brand", name: "Kavya Chocolat" },
     offers: product.variants.map((variant) => ({

@@ -24,6 +24,7 @@ export default async function EditProductPage({
     where: { id },
     include: {
       variants: { orderBy: [{ active: "desc" }, { weightGrams: "asc" }] },
+      images: { orderBy: { position: "asc" } },
       _count: { select: { orderItems: true } },
     },
   });
@@ -77,6 +78,12 @@ export default async function EditProductPage({
           published: product.published,
           position: product.position,
         }}
+        gallery={product.images.map(({ id, url, alt, position }) => ({
+          id,
+          url,
+          alt,
+          position,
+        }))}
       />
 
       <section className="space-y-4 border-t border-line pt-7">

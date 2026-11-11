@@ -205,6 +205,17 @@ export const adminProductSchema = z.object({
   featured: z.union([z.literal("on"), z.boolean()]).optional(),
 });
 
+export const adminProductImageSchema = z.object({
+  productId: z.string().min(1, "Choose a product."),
+  url: z
+    .string()
+    .trim()
+    .min(1, "Upload an image first.")
+    .max(300)
+    .regex(/^\/(?!\/)/, "Use a local path beginning with /."),
+  alt: z.string().trim().max(160).optional().or(z.literal("")),
+});
+
 export const adminVariantSchema = z.object({
   productId: z.string().min(1),
   variantId: z.string().optional(),

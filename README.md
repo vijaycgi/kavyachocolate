@@ -53,7 +53,7 @@ Built with **Next.js 16 (App Router) + TypeScript + Tailwind CSS v4 + Prisma 6 +
 **Admin** (`/admin`, all server-verified)
 - Dashboard with today's stats, low stock, and recent orders.
 - Orders list with search and status filters; order detail with allowed status transitions, tracking fields, notes, and cancellation (restores stock).
-- Products and variants: create, edit, publish, price, stock, ingredients, allergens, and photography uploaded straight from the browser or referenced as a local `/public` path.
+- Products and variants: create, edit, publish, price, stock, ingredients, allergens, and photography uploaded straight from the browser or referenced as a local `/public` path. Product photography includes a main image, a detail image, and an ordered gallery with multi-image upload, reordering and deletion.
 - Inventory ledger: every manual adjustment and every order movement is recorded with the resulting stock.
 - Customers with order history and lifetime value.
 - Shipping zones, local delivery areas, pickup locations, free-shipping threshold.
@@ -341,7 +341,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs the Node test runner through `tsx`. It covers shared Zod schemas (registration, login, checkout, address, admin product/variant/tracking/stock/settings) and redirect safety. Database-backed flows and external providers are not covered by unit tests; see the manual checklist below.
+`npm test` runs the Node test runner through `tsx`. It covers shared Zod schemas (registration, login, checkout, address, admin product/image/variant/tracking/stock/settings), gallery ordering and storefront composition helpers, and redirect safety. Database-backed flows and external providers are not covered by unit tests; see the manual checklist below.
 
 ### Browser end-to-end harnesses
 
@@ -439,6 +439,16 @@ Admins can upload product photography from the product edit page (**Photography 
 - served immutably from `/api/media/[id]` with a one-year cache header, then optimised by `next/image` like any local asset.
 
 The text path fields still work for files under `public/`. Uploads are admin-only, verify the bytes server-side, and reject renamed non-images. A replaced image is a new asset; old rows are not deleted automatically, so abandoned uploads can be pruned from `MediaAsset` if storage becomes a concern. For a very large catalogue, swap the storage layer for object storage (Vercel Blob, S3) while keeping the same `/api/admin/uploads` contract.
+
+### Product image galleries
+
+Each product can also carry an ordered gallery of extra shots. On the product edit page, **Photography → Gallery → Add images** accepts several files at once. Each accepted file is uploaded through the same `/api/admin/uploads` route and attached to the product as a `ProductImage` row.
+
+- Use the up/down arrows on each thumbnail to set the order; positions are saved immediately.
+- Use the bin button to remove an image. The row is deleted, the remaining positions are compacted, and the underlying `MediaAsset` is deleted when no product, gallery or order still references it.
+- The storefront always shows the product's **Main image** as the cover, followed by gallery rows in their saved order. Duplicate URLs are removed so the cover never appears twice.
+- Gallery rows need a product id, so a new product must be saved once before its gallery can be added.
+- Uploaded gallery images are included in the product page's JSON-LD `image` list.
 
 ---
 

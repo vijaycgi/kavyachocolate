@@ -41,8 +41,8 @@ commit once the database-backed checks below have run against a real PostgreSQL 
 - Shared zod schemas in `src/lib/validation.ts` used by client pre-validation and every
   server action/route.
 - Covered: registration, login, forgot/reset password, profile, password change, address,
-  checkout, admin login, product, variant, tracking URL, stock adjustment, delivery zone,
-  pickup location, delivery area, store settings, order status.
+  checkout, admin login, product, product image, variant, tracking URL, stock adjustment,
+  delivery zone, pickup location, delivery area, store settings, order status.
 - Field-level messages, a form-level summary, preserved values, focus on the first invalid
   field, `aria-invalid`/`aria-describedby`, and success shown only after server confirmation.
 
@@ -91,7 +91,9 @@ Migration: `prisma/migrations/20261029120000_customer_accounts/migration.sql`
 
 Separate later migration: `prisma/migrations/20261111120000_media_assets/migration.sql` adds
 `MediaAsset`, which stores admin-uploaded product photos as WebP bytes in Postgres and serves
-them from `/api/media/[id]`.
+them from `/api/media/[id]`. Product galleries reuse the existing `ProductImage` table:
+`position` stores the display order, and rows are created, reordered and deleted from the admin
+product editor.
 
 New model `Customer` columns/relations:
 - `name`, `phone`, `passwordHash`, `emailVerifiedAt`, timestamps
@@ -170,7 +172,7 @@ npm test
 npm run build
 ```
 
-`npm test` runs `tsx --test "tests/**/*.test.ts"` (23 tests, Node's built-in runner; no extra
+`npm test` runs `tsx --test "tests/**/*.test.ts"` (44 tests, Node's built-in runner; no extra
 test framework).
 
 Local build note: `npm run build` runs migrations first. With an unreachable database, use a
@@ -189,13 +191,19 @@ $env:DATABASE_URL='skip-migrations-locally'; npm run build
 
 - `npx tsc --noEmit` — clean.
 - `npm run lint` — clean.
-- `npm test` — 34/34 passing (redirect safety, password policy, register/login/checkout/
-  address/admin schemas, field-error helpers, media limits and filename sanitising).
+- `npm test` — 44/44 passing (redirect safety, password policy, register/login/checkout/
+  address/admin schemas, field-error helpers, gallery ordering/composition, media limits and
+  filename sanitising).
 - `npx next build` — compiled successfully, TypeScript passed, 40 routes emitted.
 - Product photo uploads — verified against a local PostgreSQL database: admin sign-in, file
   picker change event, `/api/admin/uploads` 201 with a 1200×1500 WebP, `/api/media/[id]` 200
   with `image/webp` and immutable caching, product save persisted the new path, unauthenticated
   upload returned 401 and a spoofed `.jpg` returned 415.
+- Product image galleries — verified against local PostgreSQL: the editor loaded the seeded
+  gallery, multi-file upload added an image through `/api/admin/uploads` plus
+  `addProductImageAction`, the up arrow reordered rows and the order survived a reload, deleting
+  a row compacted the remaining positions and removed its now-unreferenced `MediaAsset`, and the
+  storefront showed the main image first with gallery URLs in JSON-LD.
 
 ## 8. Not verified here (requires external services)
 

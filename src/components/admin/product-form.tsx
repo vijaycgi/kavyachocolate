@@ -1,6 +1,8 @@
 import Link from "next/link";
 import { saveProductAction } from "@/app/admin/(dashboard)/actions";
+import type { GalleryImageRecord } from "@/lib/gallery";
 import { ProductFormProvider, ProductSaveButton } from "./product-form-provider";
+import { ProductGalleryManager } from "./product-gallery-manager";
 import { ProductPhotography } from "./product-photography";
 
 type ProductFields = {
@@ -28,7 +30,13 @@ const collections = [
   ["JAGGERY_DRY_FRUIT", "Jaggery + dry fruits"],
 ];
 
-export function ProductForm({ product }: { product?: ProductFields }) {
+export function ProductForm({
+  product,
+  gallery = [],
+}: {
+  product?: ProductFields;
+  gallery?: GalleryImageRecord[];
+}) {
   const isNew = !product;
 
   return (
@@ -121,6 +129,7 @@ export function ProductForm({ product }: { product?: ProductFields }) {
               imageUrl={product?.imageUrl ?? "/images/products/classic.jpg"}
               hoverImageUrl={product?.hoverImageUrl ?? ""}
             />
+            <ProductGalleryManager productId={product?.id ?? null} images={gallery} />
           </section>
 
           <div className="border border-line bg-cream p-4">

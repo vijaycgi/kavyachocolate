@@ -3,6 +3,7 @@ import { describe, it } from "node:test";
 import {
   addressSchema,
   adminAreaSchema,
+  adminProductImageSchema,
   adminProductSchema,
   adminSettingsSchema,
   adminStockSchema,
@@ -201,6 +202,43 @@ describe("admin schemas", () => {
     assert.equal(adminVariantSchema.safeParse({ ...base, price: 0 }).success, false);
     assert.equal(adminVariantSchema.safeParse({ ...base, sku: "kav-70" }).success, false);
     assert.equal(adminVariantSchema.safeParse({ ...base, stock: -1 }).success, false);
+  });
+
+  it("validates gallery image paths and alt text", () => {
+    assert.equal(
+      adminProductImageSchema.safeParse({
+        productId: "p1",
+        url: "/api/media/cmwbrpjom0000i608snsm1q1r",
+        alt: "Bar close-up",
+      }).success,
+      true,
+    );
+    assert.equal(
+      adminProductImageSchema.safeParse({
+        productId: "p1",
+        url: "https://example.com/bar.jpg",
+      }).success,
+      false,
+    );
+    assert.equal(
+      adminProductImageSchema.safeParse({ productId: "p1", url: "" }).success,
+      false,
+    );
+    assert.equal(
+      adminProductImageSchema.safeParse({
+        productId: "",
+        url: "/api/media/abc",
+      }).success,
+      false,
+    );
+    assert.equal(
+      adminProductImageSchema.safeParse({
+        productId: "p1",
+        url: "/api/media/abc",
+        alt: "x".repeat(161),
+      }).success,
+      false,
+    );
   });
 
   it("only allows http(s) tracking URLs", () => {

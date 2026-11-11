@@ -5,12 +5,14 @@ import { redirect } from "next/navigation";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/db";
 import { createSession, requireAdmin } from "@/lib/auth";
+import { moveGalleryItem, type GalleryImageRecord } from "@/lib/gallery";
 import { rupeesToMinor } from "@/lib/money";
 import { addOrderNote, OrderError, updateOrderStatus, updateOrderTracking } from "@/lib/orders";
 import {
   adminAreaSchema,
   adminOrderStatusSchema,
   adminPickupSchema,
+  adminProductImageSchema,
   adminProductSchema,
   adminSettingsSchema,
   adminStockSchema,
@@ -242,6 +244,165 @@ export async function deleteProductAction(formData: FormData) {
   revalidatePath("/admin/products");
   revalidatePath("/shop");
   redirect("/admin/products?saved=deleted");
+}
+
+type GalleryActionResult =
+  | { ok: true; images: GalleryImageRecord[] }
+  | { ok: false; error: string };
+
+function productImageFields(image: GalleryImageRecord): GalleryImageRecord {
+  return { id: image.id, url: image.url, alt: image.alt, position: image.position };
+}
+
+async function orderedProductImages(productId: string) {
+  return prisma.productImage.findMany({
+    where: { productId },
+    orderBy: { position: "asc" },
+    select: { id: true, url: true, alt: true, position: true },
+  });
+}
+
+async function revalidateProductImagePaths(productId: string, slug: string) {
+  revalidatePath("/admin/products");
+  revalidatePath(`/admin/products/${productId}`);
+  revalidatePath("/shop");
+  revalidatePath("/");
+  revalidatePath(`/products/${slug}`);
+}
+
+/** Remove an uploaded asset once nothing points at it any more. */
+async function deleteUnusedMedia(url: string) {
+  const match = /^\/api\/media\/([a-z0-9]{20,32})$/i.exec(url);
+  if (!match) return;
+
+  try {
+    const [products, gallery, orders] = await Promise.all([
+      prisma.product.count({ where: { OR: [{ imageUrl: url }, { hoverImageUrl: url }] } }),
+      prisma.productImage.count({ where: { url } }),
+      prisma.orderItem.count({ where: { imageUrl: url } }),
+    ]);
+    if (products === 0 && gallery === 0 && orders === 0) {
+      await prisma.mediaAsset.delete({ where: { id: match[1] } });
+    }
+  } catch {
+    // A leftover row is harmless; never fail a gallery edit over cleanup.
+  }
+}
+
+export async function addProductImageAction(input: {
+  productId: string;
+  url: string;
+  alt?: string;
+}): Promise<GalleryActionResult> {
+  await requireAdmin();
+  const parsed = adminProductImageSchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: firstFieldError(fieldErrorsFromZod(parsed.error)) };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: parsed.data.productId },
+    select: { id: true, slug: true, name: true },
+  });
+  if (!product) return { ok: false, error: "That product no longer exists." };
+
+  const highest = await prisma.productImage.aggregate({
+    where: { productId: product.id },
+    _max: { position: true },
+  });
+
+  await prisma.productImage.create({
+    data: {
+      productId: product.id,
+      url: parsed.data.url,
+      alt: parsed.data.alt || `${product.name} — gallery image`,
+      position: (highest._max.position ?? -1) + 1,
+    },
+  });
+
+  await revalidateProductImagePaths(product.id, product.slug);
+  return { ok: true, images: await orderedProductImages(product.id) };
+}
+
+export async function moveProductImageAction(input: {
+  productId: string;
+  imageId: string;
+  direction: "up" | "down";
+}): Promise<GalleryActionResult> {
+  await requireAdmin();
+  if (!input.productId || !input.imageId) {
+    return { ok: false, error: "Choose an image to move." };
+  }
+  if (input.direction !== "up" && input.direction !== "down") {
+    return { ok: false, error: "Choose a direction." };
+  }
+
+  const product = await prisma.product.findUnique({
+    where: { id: input.productId },
+    select: {
+      id: true,
+      slug: true,
+      images: {
+        orderBy: { position: "asc" },
+        select: { id: true, url: true, alt: true, position: true },
+      },
+    },
+  });
+  if (!product) return { ok: false, error: "That product no longer exists." };
+  if (!product.images.some((image) => image.id === input.imageId)) {
+    return { ok: false, error: "That image no longer exists." };
+  }
+
+  const next = moveGalleryItem(product.images, input.imageId, input.direction);
+  if (next === product.images) {
+    return { ok: true, images: product.images.map(productImageFields) };
+  }
+
+  await prisma.$transaction(
+    next.map((image, index) =>
+      prisma.productImage.update({ where: { id: image.id }, data: { position: index } }),
+    ),
+  );
+
+  await revalidateProductImagePaths(product.id, product.slug);
+  return {
+    ok: true,
+    images: next.map((image, index) => ({ ...productImageFields(image), position: index })),
+  };
+}
+
+export async function deleteProductImageAction(input: {
+  imageId: string;
+}): Promise<GalleryActionResult> {
+  await requireAdmin();
+  if (!input.imageId) return { ok: false, error: "Choose an image to remove." };
+
+  const image = await prisma.productImage.findUnique({
+    where: { id: input.imageId },
+    select: {
+      id: true,
+      productId: true,
+      url: true,
+      product: { select: { slug: true } },
+    },
+  });
+  if (!image) return { ok: false, error: "That image no longer exists." };
+
+  await prisma.productImage.delete({ where: { id: image.id } });
+
+  const remaining = await orderedProductImages(image.productId);
+  await prisma.$transaction(
+    remaining.map((row, index) =>
+      prisma.productImage.update({ where: { id: row.id }, data: { position: index } }),
+    ),
+  );
+
+  await deleteUnusedMedia(image.url);
+  await revalidateProductImagePaths(image.productId, image.product.slug);
+  return {
+    ok: true,
+    images: remaining.map((row, index) => ({ ...row, position: index })),
+  };
 }
 
 export async function saveVariantAction(formData: FormData) {
